@@ -21,14 +21,22 @@
 故宫壁纸功能（在线获取 + 缓存轮播）
 ![故宫壁纸功能](docs/images/故宫壁纸功能.png)
 
+## 版本
+- 当前打包版本：`2.0.0`
+
 ## 安装包位置（本机）
 ```
-D:\Ai\huyanba\huzamba\src-tauri\target\release\bundle\nsis\huyanba_0.4.0_x64-setup.exe
+D:\Ai\huyanba\huzamba\aseet
 ```
 
-## 安装包下载
-- 直接下载（Windows x64）：https://github.com/guoruya/huyanba/releases/download/v0.4.0/huyanba_0.4.0_x64-setup.exe
-- Release 页面：https://github.com/guoruya/huyanba/releases/tag/v0.4.0
+当前已整理的打包产物：
+- `aseet\huyanba_2.0.0_x64-setup.exe`
+- `aseet\huyanba_2.0.0_x64_en-US.msi`
+
+## 下载
+- [点击下载便携版 EXE（NSIS 安装包）](https://github.com/guoruya/huyanba/releases/download/v2.0.0/huyanba_2.0.0_x64-setup.exe)
+- [点击下载 MSI 安装包](https://github.com/guoruya/huyanba/releases/download/v2.0.0/huyanba_2.0.0_x64_en-US.msi)
+- [查看 v2.0.0 Release 页面](https://github.com/guoruya/huyanba/releases/tag/v2.0.0)
 
 ## 本地开发
 ```
@@ -43,9 +51,9 @@ cd D:\Ai\huyanba\huzamba
 npm run tauri build
 ```
 
-产物目录：
+打包完成后，安装包会额外整理到项目根目录下的 `aseet` 目录：
 ```
-src-tauri\target\release\bundle
+aseet
 ```
 
 ## 说明
@@ -77,14 +85,22 @@ Lockscreen
 Palace Museum wallpapers (online fetch + cached rotation)
 ![Palace Museum Wallpapers](docs/images/故宫壁纸功能.png)
 
+## Version
+- Current packaged version: `2.0.0`
+
 ## Installer (local path)
 ```
-D:\Ai\huyanba\huzamba\src-tauri\target\release\bundle\nsis\huyanba_0.4.0_x64-setup.exe
+D:\Ai\huyanba\huzamba\aseet
 ```
 
+Packaged artifacts currently available:
+- `aseet\huyanba_2.0.0_x64-setup.exe`
+- `aseet\huyanba_2.0.0_x64_en-US.msi`
+
 ## Download
-- Direct download (Windows x64): https://github.com/guoruya/huyanba/releases/download/v0.4.0/huyanba_0.4.0_x64-setup.exe
-- Release page: https://github.com/guoruya/huyanba/releases/tag/v0.4.0
+- [Download NSIS installer (.exe)](https://github.com/guoruya/huyanba/releases/download/v2.0.0/huyanba_2.0.0_x64-setup.exe)
+- [Download MSI installer (.msi)](https://github.com/guoruya/huyanba/releases/download/v2.0.0/huyanba_2.0.0_x64_en-US.msi)
+- [Open the v2.0.0 release page](https://github.com/guoruya/huyanba/releases/tag/v2.0.0)
 
 ## Development
 ```
@@ -97,4 +113,9 @@ npm run tauri dev
 ```
 cd D:\Ai\huyanba\huzamba
 npm run tauri build
+```
+
+After the build, the packaged outputs are also copied to:
+```
+aseet
 ```

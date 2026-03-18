@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="72" x2="416" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2E9389"/>
+      <stop offset="1" stop-color="#185D5C"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 180) rotate(90) scale(212)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="iris" x1="214" y1="198" x2="304" y2="314" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F6D28D"/>
+      <stop offset="1" stop-color="#E79E47"/>
+    </linearGradient>
+  </defs>
+  <rect x="48" y="48" width="416" height="416" rx="124" fill="url(#bg)"/>
+  <rect x="60" y="60" width="392" height="392" rx="112" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="8"/>
+  <ellipse cx="256" cy="264" rx="152" ry="104" fill="#F7F0E3"/>
+  <ellipse cx="256" cy="264" rx="134" ry="88" fill="#1E766F"/>
+  <circle cx="256" cy="256" r="70" fill="url(#iris)"/>
+  <path d="M256 188C244.2 188 232.82 191.48 223.12 198.01C213.41 204.53 205.86 213.81 201.4 224.66C196.93 235.51 195.74 247.45 197.99 258.98C200.24 270.51 205.83 281.1 214.08 289.41C222.34 297.72 232.86 303.38 244.31 305.67C255.76 307.97 267.62 306.78 278.4 302.26C289.18 297.74 298.39 290.1 304.87 280.31C311.35 270.53 314.8 259.03 314.8 247.29C314.8 231.55 308.59 216.45 297.53 205.32C286.47 194.19 271.47 188 256 188Z" fill="#185D5C" fill-opacity="0.22"/>
+  <path d="M172 268C199 293.33 227 306 256 306C285 306 313 293.33 340 268" stroke="#185D5C" stroke-width="18" stroke-linecap="round"/>
+  <path d="M174 232C201 204.67 228.33 191 256 191C283.67 191 311 204.67 338 232" stroke="#FFF7EA" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="20" fill="#FFF7EA"/>
+  <path d="M334 162L342 178L358 186L342 194L334 210L326 194L310 186L326 178L334 162Z" fill="#FFF7EA"/>
+  <path d="M154 344C183.333 370 217.333 383 256 383C294.667 383 328.667 370 358 344" stroke="#9FD5C5" stroke-width="12" stroke-linecap="round" opacity="0.88"/>
+  <rect x="48" y="48" width="416" height="416" rx="124" fill="url(#glow)"/>
+</svg>
