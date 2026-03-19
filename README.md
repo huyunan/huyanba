@@ -9,17 +9,17 @@
 - 托盘控制：显示/隐藏/立即休息/退出
 
 ## 界面截图
-首页（护眼状态概览 + 下一次休息）
-![首页](docs/images/首页.png)
+- 首页总览（当前护眼状态 + 下一次休息）
+![首页总览](docs/images/dashboard-overview.png)
 
-功能（过滤蓝光强度/色调 + 休息节奏）
-![功能](docs/images/功能.png)
+- 壁纸控制台 / Unsplash（在线搜索与下载）
+![壁纸控制台 Unsplash](docs/images/wallpaper-console-unsplash.png)
 
-锁屏（全屏覆盖 + 倒计时）
-![锁屏](docs/images/锁屏.png)
+- 壁纸控制台 / 故宫来源（来源切换与分页控制）
+![壁纸控制台 故宫概览](docs/images/wallpaper-console-palace-overview.png)
 
-故宫壁纸功能（在线获取 + 缓存轮播）
-![故宫壁纸功能](docs/images/故宫壁纸功能.png)
+- 壁纸控制台 / 故宫候选网格（本地候选预览）
+![壁纸控制台 故宫候选网格](docs/images/wallpaper-console-palace-grid.png)
 
 ## 版本
 - 当前打包版本：`2.0.0`
@@ -73,17 +73,17 @@ Desktop eye-care app: blue-light filter + scheduled break lockscreen.
 - Tray controls (show/hide/rest/quit)
 
 ## Screenshots
-Home (status + next break)
-![Home](docs/images/首页.png)
+- Dashboard overview (current eye-care state + next break)
+![Dashboard overview](docs/images/dashboard-overview.png)
 
-Filter & Schedule
-![Features](docs/images/功能.png)
+- Wallpaper console / Unsplash (online search and download)
+![Wallpaper console Unsplash](docs/images/wallpaper-console-unsplash.png)
 
-Lockscreen
-![Lockscreen](docs/images/锁屏.png)
+- Wallpaper console / Palace source (source switching and paging)
+![Wallpaper console Palace overview](docs/images/wallpaper-console-palace-overview.png)
 
-Palace Museum wallpapers (online fetch + cached rotation)
-![Palace Museum Wallpapers](docs/images/故宫壁纸功能.png)
+- Wallpaper console / Palace candidate grid (local preview batch)
+![Wallpaper console Palace grid](docs/images/wallpaper-console-palace-grid.png)
 
 ## Version
 - Current packaged version: `2.0.0`

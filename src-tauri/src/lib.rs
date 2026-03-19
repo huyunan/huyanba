@@ -165,6 +165,13 @@ struct WallpaperStorageConfig {
     custom_dir: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct UnsplashSettingsConfig {
+    #[serde(default)]
+    access_key: String,
+}
+
 #[derive(Default, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct PrefetchStats {
@@ -188,6 +195,32 @@ struct WallpaperStorageUpdateResult {
     settings: WallpaperStorageSettings,
     migrated_files: usize,
     restored_default: bool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(rename_all = "camelCase")]
+enum UnsplashConfigSource {
+    AppConfig,
+    EnvLocal,
+    Env,
+    None,
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct UnsplashSettings {
+    effective_configured: bool,
+    config_source: UnsplashConfigSource,
+    has_stored_key: bool,
+    masked_stored_key: Option<String>,
+}
+
+#[derive(Clone)]
+struct ResolvedUnsplashAccessKey {
+    access_key: Option<String>,
+    source: UnsplashConfigSource,
+    has_stored_key: bool,
+    masked_stored_key: Option<String>,
 }
 
 #[derive(Serialize, Clone)]
@@ -716,6 +749,21 @@ fn save_wallpaper_storage_config(
     fs::write(path, data).map_err(|err| err.to_string())
 }
 
+fn load_unsplash_settings_config(path: &Path) -> UnsplashSettingsConfig {
+    let Ok(data) = fs::read_to_string(path) else {
+        return UnsplashSettingsConfig::default();
+    };
+    serde_json::from_str(&data).unwrap_or_default()
+}
+
+fn save_unsplash_settings_config(
+    path: &Path,
+    config: &UnsplashSettingsConfig,
+) -> Result<(), String> {
+    let data = serde_json::to_string_pretty(config).map_err(|err| err.to_string())?;
+    fs::write(path, data).map_err(|err| err.to_string())
+}
+
 fn path_to_string(path: &Path) -> String {
     path.to_string_lossy().to_string()
 }
@@ -733,6 +781,15 @@ fn wallpaper_storage_config_path(app: &AppHandle) -> Result<PathBuf, String> {
         .map_err(|err| err.to_string())?;
     fs::create_dir_all(&dir).map_err(|err| err.to_string())?;
     Ok(dir.join("wallpaper-storage.json"))
+}
+
+fn unsplash_settings_config_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .resolve("", BaseDirectory::AppConfig)
+        .map_err(|err| err.to_string())?;
+    fs::create_dir_all(&dir).map_err(|err| err.to_string())?;
+    Ok(dir.join("unsplash-settings.json"))
 }
 
 fn wallpaper_storage_settings_from_config(
@@ -758,6 +815,93 @@ fn get_wallpaper_storage_settings_inner(
     let config_path = wallpaper_storage_config_path(app)?;
     let config = load_wallpaper_storage_config(&config_path);
     wallpaper_storage_settings_from_config(app, &config)
+}
+
+fn read_unsplash_settings_config(app: &AppHandle) -> UnsplashSettingsConfig {
+    let Ok(config_path) = unsplash_settings_config_path(app) else {
+        return UnsplashSettingsConfig::default();
+    };
+    load_unsplash_settings_config(&config_path)
+}
+
+fn mask_access_key(value: &str) -> Option<String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    let chars = trimmed.chars().collect::<Vec<_>>();
+    let len = chars.len();
+    let (head_len, tail_len) = if len > 8 {
+        (4, 4)
+    } else {
+        (2.min(len), 2.min(len))
+    };
+    let head = chars.iter().take(head_len).collect::<String>();
+    let tail = chars
+        .iter()
+        .skip(len.saturating_sub(tail_len))
+        .collect::<String>();
+    Some(if len <= head_len + tail_len {
+        format!("{}...", head)
+    } else {
+        format!("{}...{}", head, tail)
+    })
+}
+
+fn resolve_unsplash_access_key(app: &AppHandle) -> ResolvedUnsplashAccessKey {
+    let stored_config = read_unsplash_settings_config(app);
+    let stored_key = stored_config.access_key.trim().to_string();
+    let has_stored_key = !stored_key.is_empty();
+    let masked_stored_key = mask_access_key(&stored_key);
+    if has_stored_key {
+        return ResolvedUnsplashAccessKey {
+            access_key: Some(stored_key),
+            source: UnsplashConfigSource::AppConfig,
+            has_stored_key,
+            masked_stored_key,
+        };
+    }
+
+    if let Some(value) = read_local_env_value("UNSPLASH_ACCESS_KEY") {
+        return ResolvedUnsplashAccessKey {
+            access_key: Some(value),
+            source: UnsplashConfigSource::EnvLocal,
+            has_stored_key,
+            masked_stored_key,
+        };
+    }
+
+    if let Ok(value) = env::var("UNSPLASH_ACCESS_KEY") {
+        let value = value.trim().to_string();
+        if !value.is_empty() {
+            return ResolvedUnsplashAccessKey {
+                access_key: Some(value),
+                source: UnsplashConfigSource::Env,
+                has_stored_key,
+                masked_stored_key,
+            };
+        }
+    }
+
+    ResolvedUnsplashAccessKey {
+        access_key: None,
+        source: UnsplashConfigSource::None,
+        has_stored_key,
+        masked_stored_key,
+    }
+}
+
+fn unsplash_settings_from_resolved(resolved: ResolvedUnsplashAccessKey) -> UnsplashSettings {
+    UnsplashSettings {
+        effective_configured: resolved.access_key.is_some(),
+        config_source: resolved.source,
+        has_stored_key: resolved.has_stored_key,
+        masked_stored_key: resolved.masked_stored_key,
+    }
+}
+
+fn get_unsplash_settings_inner(app: &AppHandle) -> UnsplashSettings {
+    unsplash_settings_from_resolved(resolve_unsplash_access_key(app))
 }
 
 fn allow_wallpaper_dir_on_scope(app: &AppHandle, dir: &Path) -> Result<(), String> {
@@ -1270,8 +1414,8 @@ fn remote_source_label(source: WallpaperRemoteSource) -> &'static str {
     }
 }
 
-fn resolve_online_source() -> WallpaperRemoteSource {
-    if get_unsplash_access_key().is_some() {
+fn resolve_online_source(app: &AppHandle) -> WallpaperRemoteSource {
+    if resolve_unsplash_access_key(app).access_key.is_some() {
         WallpaperRemoteSource::Unsplash
     } else {
         WallpaperRemoteSource::Palace
@@ -1607,15 +1751,6 @@ fn read_local_env_value(key: &str) -> Option<String> {
         }
     }
     None
-}
-
-fn get_unsplash_access_key() -> Option<String> {
-    read_local_env_value("UNSPLASH_ACCESS_KEY").or_else(|| {
-        env::var("UNSPLASH_ACCESS_KEY")
-            .ok()
-            .map(|value| value.trim().to_string())
-            .filter(|value| !value.is_empty())
-    })
 }
 
 fn build_unsplash_api_client(access_key: &str, disable_proxy: bool) -> Result<Client, String> {
@@ -2082,7 +2217,7 @@ fn not_configured_search_result(page: usize, per_page: usize) -> RemoteWallpaper
         has_next_page: false,
         items: Vec::new(),
         error_message: Some(
-            "未配置 UNSPLASH_ACCESS_KEY，可在 .env.local 或环境变量里设置。".into(),
+            "未配置 Unsplash Access Key，可在壁纸设置里填写，或继续使用环境变量。".into(),
         ),
     }
 }
@@ -2163,13 +2298,14 @@ fn fetch_unsplash_search_page(
 }
 
 fn search_unsplash_wallpapers_blocking(
+    app: &AppHandle,
     query: String,
     page: usize,
     per_page: usize,
 ) -> Result<RemoteWallpaperSearchResult, String> {
     let page = page.max(1);
     let per_page = per_page.clamp(1, 30);
-    let Some(access_key) = get_unsplash_access_key() else {
+    let Some(access_key) = resolve_unsplash_access_key(app).access_key else {
         return Ok(not_configured_search_result(page, per_page));
     };
     with_unsplash_client(&access_key, None, "search", |client| {
@@ -2998,8 +3134,8 @@ fn try_prefetch_unsplash_wallpaper(
         append_wallpaper_log(app, "预取跳过: 与上次下载间隔过短");
         return Ok(PrefetchStats::default());
     }
-    let access_key = get_unsplash_access_key().ok_or_else(|| {
-        "未配置 UNSPLASH_ACCESS_KEY，可在 .env.local 或环境变量里设置。".to_string()
+    let access_key = resolve_unsplash_access_key(app).access_key.ok_or_else(|| {
+        "未配置 Unsplash Access Key，可在壁纸设置里填写，或继续使用环境变量。".to_string()
     })?;
     with_unsplash_client(&access_key, Some(app), "prefetch", |client| {
         let mut stats = PrefetchStats {
@@ -3084,7 +3220,7 @@ fn try_prefetch_wallpaper(
     allow_download: bool,
     target_count: usize,
 ) -> Result<PrefetchStats, String> {
-    match resolve_online_source() {
+    match resolve_online_source(app) {
         WallpaperRemoteSource::Unsplash => {
             try_prefetch_unsplash_wallpaper(app, wall_state, dir, allow_download, target_count)
         }
@@ -3164,7 +3300,7 @@ fn run_wallpaper_batch(
         );
     }
 
-    let source = resolve_online_source();
+    let source = resolve_online_source(app);
     let effective_target_count = if source == WallpaperRemoteSource::Palace {
         PALACE_STAGING_BATCH_SIZE
     } else {
@@ -3421,13 +3557,44 @@ fn set_wallpaper_storage_dir(
 }
 
 #[tauri::command]
+fn get_unsplash_settings(app: AppHandle) -> Result<UnsplashSettings, String> {
+    Ok(get_unsplash_settings_inner(&app))
+}
+
+#[tauri::command]
+fn set_unsplash_access_key(app: AppHandle, access_key: String) -> Result<UnsplashSettings, String> {
+    let access_key = access_key.trim();
+    if access_key.is_empty() {
+        return Err("请输入 Unsplash Access Key。".into());
+    }
+    let config_path = unsplash_settings_config_path(&app)?;
+    let config = UnsplashSettingsConfig {
+        access_key: access_key.to_string(),
+    };
+    save_unsplash_settings_config(&config_path, &config)
+        .map_err(|err| format!("保存 Unsplash Access Key 失败: {}", err))?;
+    Ok(get_unsplash_settings_inner(&app))
+}
+
+#[tauri::command]
+fn clear_unsplash_access_key(app: AppHandle) -> Result<UnsplashSettings, String> {
+    let config_path = unsplash_settings_config_path(&app)?;
+    if config_path.exists() {
+        fs::remove_file(&config_path)
+            .map_err(|err| format!("清除 Unsplash Access Key 失败: {}", err))?;
+    }
+    Ok(get_unsplash_settings_inner(&app))
+}
+
+#[tauri::command]
 async fn search_unsplash_wallpapers(
+    app: AppHandle,
     query: String,
     page: usize,
     per_page: usize,
 ) -> Result<RemoteWallpaperSearchResult, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        search_unsplash_wallpapers_blocking(query, page, per_page)
+        search_unsplash_wallpapers_blocking(&app, query, page, per_page)
     })
     .await
     .map_err(|err| err.to_string())?
@@ -3857,9 +4024,11 @@ async fn download_unsplash_wallpaper(
         let state_path = dir.join("index.json");
         let mut wall_state = load_wallpaper_state(&state_path);
         normalize_wallpaper_state(&dir, &mut wall_state)?;
-        let access_key = get_unsplash_access_key().ok_or_else(|| {
-            "未配置 UNSPLASH_ACCESS_KEY，可在 .env.local 或环境变量里设置。".to_string()
-        })?;
+        let access_key = resolve_unsplash_access_key(&app)
+            .access_key
+            .ok_or_else(|| {
+                "未配置 Unsplash Access Key，可在壁纸设置里填写，或继续使用环境变量。".to_string()
+            })?;
         let result = with_unsplash_client(&access_key, Some(&app), "download", |client| {
             download_unsplash_wallpaper_internal(
                 &app,
@@ -4096,6 +4265,9 @@ pub fn run() {
             refresh_lock_wallpaper_now,
             get_wallpaper_storage_settings,
             set_wallpaper_storage_dir,
+            get_unsplash_settings,
+            set_unsplash_access_key,
+            clear_unsplash_access_key,
             search_unsplash_wallpapers,
             browse_palace_wallpapers,
             refresh_palace_staging_batch,

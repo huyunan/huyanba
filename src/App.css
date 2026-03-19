@@ -400,6 +400,11 @@ body {
   justify-content: flex-start;
 }
 
+.wallpaper-storage-panel__divider {
+  height: 1px;
+  border-top: 1px dashed rgba(30, 95, 91, 0.16);
+}
+
 .wallpaper-storage-field {
   display: grid;
   gap: 8px;
