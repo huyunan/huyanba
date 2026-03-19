@@ -22,7 +22,7 @@
 ![壁纸控制台 故宫候选网格](docs/images/wallpaper-console-palace-grid.png)
 
 ## 版本
-- 当前打包版本：`2.0.0`
+- 当前打包版本：`2.1.0`
 
 ## 安装包位置（本机）
 ```
@@ -30,13 +30,13 @@ D:\Ai\huyanba\huzamba\aseet
 ```
 
 当前已整理的打包产物：
-- `aseet\huyanba_2.0.0_x64-setup.exe`
-- `aseet\huyanba_2.0.0_x64_en-US.msi`
+- `aseet\huyanba_2.1.0_x64-setup.exe`
+- `aseet\huyanba_2.1.0_x64_en-US.msi`
 
 ## 下载
-- [点击下载便携版 EXE（NSIS 安装包）](https://github.com/guoruya/huyanba/releases/download/v2.0.0/huyanba_2.0.0_x64-setup.exe)
-- [点击下载 MSI 安装包](https://github.com/guoruya/huyanba/releases/download/v2.0.0/huyanba_2.0.0_x64_en-US.msi)
-- [查看 v2.0.0 Release 页面](https://github.com/guoruya/huyanba/releases/tag/v2.0.0)
+- [点击下载便携版 EXE（NSIS 安装包）](https://github.com/guoruya/huyanba/releases/download/v2.1.0/huyanba_2.1.0_x64-setup.exe)
+- [点击下载 MSI 安装包](https://github.com/guoruya/huyanba/releases/download/v2.1.0/huyanba_2.1.0_x64_en-US.msi)
+- [查看 v2.1.0 Release 页面](https://github.com/guoruya/huyanba/releases/tag/v2.1.0)
 
 ## 本地开发
 ```
@@ -86,7 +86,7 @@ Desktop eye-care app: blue-light filter + scheduled break lockscreen.
 ![Wallpaper console Palace grid](docs/images/wallpaper-console-palace-grid.png)
 
 ## Version
-- Current packaged version: `2.0.0`
+- Current packaged version: `2.1.0`
 
 ## Installer (local path)
 ```
@@ -94,13 +94,13 @@ D:\Ai\huyanba\huzamba\aseet
 ```
 
 Packaged artifacts currently available:
-- `aseet\huyanba_2.0.0_x64-setup.exe`
-- `aseet\huyanba_2.0.0_x64_en-US.msi`
+- `aseet\huyanba_2.1.0_x64-setup.exe`
+- `aseet\huyanba_2.1.0_x64_en-US.msi`
 
 ## Download
-- [Download NSIS installer (.exe)](https://github.com/guoruya/huyanba/releases/download/v2.0.0/huyanba_2.0.0_x64-setup.exe)
-- [Download MSI installer (.msi)](https://github.com/guoruya/huyanba/releases/download/v2.0.0/huyanba_2.0.0_x64_en-US.msi)
-- [Open the v2.0.0 release page](https://github.com/guoruya/huyanba/releases/tag/v2.0.0)
+- [Download NSIS installer (.exe)](https://github.com/guoruya/huyanba/releases/download/v2.1.0/huyanba_2.1.0_x64-setup.exe)
+- [Download MSI installer (.msi)](https://github.com/guoruya/huyanba/releases/download/v2.1.0/huyanba_2.1.0_x64_en-US.msi)
+- [Open the v2.1.0 release page](https://github.com/guoruya/huyanba/releases/tag/v2.1.0)
 
 ## Development
 ```
