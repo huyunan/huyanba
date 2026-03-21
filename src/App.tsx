@@ -297,9 +297,6 @@ function App() {
   const [lockSessionFixedMode, setLockSessionFixedMode] = useState(false);
   const [wallpaperRefreshPending, setWallpaperRefreshPending] = useState(false);
   const [activeView, setActiveView] = useState<AppView>("dashboard");
-  const [unsplashSearchInput, setUnsplashSearchInput] = useState("");
-  const [unsplashSearchResult, setUnsplashSearchResult] =
-    useState<RemoteWallpaperSearchResult | null>(null);
   const [unsplashSearchLoading, setUnsplashSearchLoading] = useState(false);
   const [unsplashSearchError, setUnsplashSearchError] = useState<string | null>(
     null,
@@ -432,27 +429,6 @@ function App() {
     setRestEndAt(endAt);
     setShowLockScreen(true);
   }, [restDuration]);
-
-  const selectedUnsplashWallpaper = useMemo(
-    () =>
-      unsplashSearchResult?.items.find(
-        (item) => item.id === selectedUnsplashWallpaperId,
-      ) ??
-      unsplashSearchResult?.items[0] ??
-      null,
-    [selectedUnsplashWallpaperId, unsplashSearchResult],
-  );
-  const selectedPalaceStagingWallpaper = useMemo(
-    () =>
-      palaceStagingWallpapers.find(
-        (item) => item.sourceUrl === selectedPalaceStagingSource,
-      ) ??
-      palaceStagingWallpapers[0] ??
-      null,
-    [palaceStagingWallpapers, selectedPalaceStagingSource],
-  );
-
-  const selectedPalaceStageCount = selectedPalaceStageSources.length;
 
   const selectedLocalWallpaper = useMemo(
     () =>
@@ -792,7 +768,6 @@ function App() {
     isLockWindow,
     loadLocalWallpapers,
     loadPalaceStagingWallpapers,
-    unsplashSearchResult,
     wallpaperRefreshPending,
   ]);
 
@@ -942,7 +917,6 @@ function App() {
     isLockWindow,
     palaceRefreshStatus,
     unsplashAccessKeyInput,
-    unsplashSearchInput,
     unsplashSettingsPending,
   ]);
 
@@ -980,229 +954,9 @@ function App() {
     activeView,
     isLockWindow,
     palaceRefreshStatus,
-    unsplashSearchInput,
     unsplashSettingsPending,
   ]);
-
-  const handleDownloadWallpaper = useCallback(
-    async (setFixed: boolean) => {
-      if (!selectedUnsplashWallpaper) return;
-      const sourceLabel = getRemoteSourceLabel(selectedUnsplashWallpaper.source);
-      setWallpaperActionPending(setFixed ? "fixed" : "download");
-      setWallpaperActionTone("muted");
-      setWallpaperActionMessage(`正在下载 ${sourceLabel} 壁纸，这可能需要几秒钟。`);
-      try {
-        const result = await invoke<DownloadWallpaperResult>(
-          "download_unsplash_wallpaper",
-          {
-            payload: selectedUnsplashWallpaper.downloadPayload,
-            setFixed,
-          },
-        );
-        setWallpaperActionTone("success");
-        if (setFixed) {
-          setWallpaperActionMessage(`已从 ${sourceLabel} 下载并固定为当前锁屏壁纸。`);
-        } else if (result.added) {
-          setWallpaperActionMessage(`已从 ${sourceLabel} 下载到本地壁纸库。`);
-        } else {
-          setWallpaperActionMessage(`这张 ${sourceLabel} 壁纸已经在本地，信息已同步。`);
-        }
-        await loadLocalWallpapers();
-        setSelectedLocalWallpaperSource(result.sourceUrl);
-      } catch (error) {
-        console.error("下载在线壁纸失败", error);
-        setWallpaperActionTone("error");
-        setWallpaperActionMessage(describeWallpaperError(error));
-      } finally {
-        setWallpaperActionPending("");
-      }
-    },
-    [loadLocalWallpapers, selectedUnsplashWallpaper],
-  );
-
-  const handlePromotePalaceWallpaper = useCallback(
-    async (setFixed: boolean) => {
-      if (palaceRefreshStatus?.state === "running") return;
-      if (!selectedPalaceStagingWallpaper) return;
-      setWallpaperActionPending(setFixed ? "promote-fixed" : "promote");
-      setWallpaperActionTone("muted");
-      setWallpaperActionMessage(
-        setFixed
-          ? "正在把这张故宫候选图加入本地库并固定。"
-          : "正在把这张故宫候选图加入本地库。",
-      );
-      try {
-        const result = await invoke<DownloadWallpaperResult>(
-          "promote_palace_staging_wallpaper",
-          {
-            sourceUrl: selectedPalaceStagingWallpaper.sourceUrl,
-            setFixed,
-          },
-        );
-        setWallpaperActionTone("success");
-        setWallpaperActionMessage(
-          setFixed
-            ? "这张故宫壁纸已经加入本地库，并固定为当前锁屏壁纸。"
-            : result.added
-              ? "这张故宫壁纸已经加入本地壁纸库。"
-              : "这张故宫壁纸原本就在本地库里，信息已同步。",
-        );
-        await Promise.all([
-          loadLocalWallpapers(),
-          loadPalaceStagingWallpapers(),
-        ]);
-        setSelectedLocalWallpaperSource(result.sourceUrl);
-      } catch (error) {
-        console.error("采纳故宫候选壁纸失败", error);
-        setWallpaperActionTone("error");
-        setWallpaperActionMessage(describeWallpaperError(error));
-      } finally {
-        setWallpaperActionPending("");
-      }
-    },
-    [
-      loadLocalWallpapers,
-      loadPalaceStagingWallpapers,
-      palaceRefreshStatus,
-      selectedPalaceStagingWallpaper,
-    ],
-  );
-
-  const handlePalacePageChange = useCallback(
-    async (targetPage: number) => {
-      if (palaceStagingLoading || palaceRefreshStatus?.state === "running") {
-        return;
-      }
-      const nextPage = Math.max(1, targetPage);
-      if (nextPage === palaceStagingPage) return;
-      await refreshPalaceStagingBatch("page", nextPage);
-    },
-    [palaceRefreshStatus, palaceStagingLoading, palaceStagingPage, refreshPalaceStagingBatch],
-  );
-
-  const handleEnterPalaceBatchMode = useCallback(() => {
-    if (palaceRefreshStatus?.state === "running") return;
-    setPalaceBatchMode(true);
-    setSelectedPalaceStageSources([]);
-    setWallpaperActionTone("muted");
-    setWallpaperActionMessage("已进入批量模式，可以勾选多张故宫候选图一起加入本地库。");
-  }, [palaceRefreshStatus]);
-
-  const handleExitPalaceBatchMode = useCallback(() => {
-    setPalaceBatchMode(false);
-    setSelectedPalaceStageSources([]);
-  }, []);
-
-  const handleTogglePalaceStageSelection = useCallback(
-    (sourceUrl: string) => {
-      if (palaceRefreshStatus?.state === "running") return;
-      setSelectedPalaceStagingSource(sourceUrl);
-      if (!palaceBatchMode) return;
-      setSelectedPalaceStageSources((prev) =>
-        prev.includes(sourceUrl)
-          ? prev.filter((item) => item !== sourceUrl)
-          : [...prev, sourceUrl],
-      );
-    },
-    [palaceBatchMode, palaceRefreshStatus],
-  );
-
-  const handleSelectAllPalaceStage = useCallback(() => {
-    if (palaceRefreshStatus?.state === "running") return;
-    setSelectedPalaceStageSources(
-      palaceStagingWallpapers.map((item) => item.sourceUrl),
-    );
-  }, [palaceRefreshStatus, palaceStagingWallpapers]);
-
-  const handleClearPalaceStageSelection = useCallback(() => {
-    if (palaceRefreshStatus?.state === "running") return;
-    setSelectedPalaceStageSources([]);
-  }, [palaceRefreshStatus]);
-
-  const handlePromoteSelectedPalaceWallpapers = useCallback(async () => {
-    if (palaceRefreshStatus?.state === "running") return;
-    if (selectedPalaceStageSources.length === 0) {
-      setWallpaperActionTone("error");
-      setWallpaperActionMessage("请先选择至少一张故宫候选壁纸。");
-      return;
-    }
-    setWallpaperActionPending("promote-bulk");
-    setWallpaperActionTone("muted");
-    setWallpaperActionMessage(
-      `正在把选中的 ${selectedPalaceStageSources.length} 张故宫候选图加入本地库。`,
-    );
-    try {
-      const result = await invoke<PalaceStagingBatchResult>(
-        "promote_palace_staging_wallpapers",
-        { sourceUrls: selectedPalaceStageSources },
-      );
-      applyPalaceStagingResult(result);
-      setSelectedPalaceStageSources([]);
-      await loadLocalWallpapers();
-      setWallpaperActionTone("success");
-      setWallpaperActionMessage(
-        result.processedCount > 0 && result.skippedCount > 0
-          ? `已加入 ${result.processedCount} 张，另有 ${result.skippedCount} 张本来就在本地库中。`
-          : result.processedCount > 0
-            ? `已把 ${result.processedCount} 张故宫候选图加入本地壁纸库。`
-            : `选中的 ${result.skippedCount} 张都已在本地库中，候选区已同步移除。`,
-      );
-    } catch (error) {
-      console.error("批量采纳故宫候选壁纸失败", error);
-      setWallpaperActionTone("error");
-      setWallpaperActionMessage(describeWallpaperError(error));
-    } finally {
-      setWallpaperActionPending("");
-    }
-  }, [
-    applyPalaceStagingResult,
-    loadLocalWallpapers,
-    palaceRefreshStatus,
-    selectedPalaceStageSources,
-  ]);
-
-  const handlePromoteAllPalaceWallpapers = useCallback(async () => {
-    if (palaceRefreshStatus?.state === "running") return;
-    if (palaceStagingWallpapers.length === 0) {
-      setWallpaperActionTone("error");
-      setWallpaperActionMessage("当前页没有可加入本地库的故宫候选壁纸。");
-      return;
-    }
-    setWallpaperActionPending("promote-bulk");
-    setWallpaperActionTone("muted");
-    setWallpaperActionMessage(
-      `正在把当前页的 ${palaceStagingWallpapers.length} 张故宫候选图全部加入本地库。`,
-    );
-    try {
-      const result = await invoke<PalaceStagingBatchResult>(
-        "promote_palace_staging_wallpapers",
-        { sourceUrls: palaceStagingWallpapers.map((item) => item.sourceUrl) },
-      );
-      applyPalaceStagingResult(result);
-      setSelectedPalaceStageSources([]);
-      await loadLocalWallpapers();
-      setWallpaperActionTone("success");
-      setWallpaperActionMessage(
-        result.processedCount > 0 && result.skippedCount > 0
-          ? `当前页已加入 ${result.processedCount} 张，另有 ${result.skippedCount} 张原本就在本地库中。`
-          : result.processedCount > 0
-            ? `当前页这批故宫候选图已经全部加入本地壁纸库。`
-            : `当前页候选图原本都在本地库中，候选区已同步清空。`,
-      );
-    } catch (error) {
-      console.error("全部采纳故宫候选壁纸失败", error);
-      setWallpaperActionTone("error");
-      setWallpaperActionMessage(describeWallpaperError(error));
-    } finally {
-      setWallpaperActionPending("");
-    }
-  }, [
-    applyPalaceStagingResult,
-    loadLocalWallpapers,
-    palaceRefreshStatus,
-    palaceStagingWallpapers,
-  ]);
-
+  
   const handleFixWallpaper = useCallback(
     async (sourceUrl: string) => {
       setWallpaperActionPending("fixed-local");
@@ -1442,9 +1196,7 @@ function App() {
     palaceStagingLoading,
     refreshPalaceStagingBatch,
     unsplashSearchError,
-    unsplashSearchInput,
     unsplashSearchLoading,
-    unsplashSearchResult,
     unsplashSettings?.effectiveConfigured,
   ]);
 
@@ -1766,37 +1518,13 @@ function App() {
   const usageText = formatUsage((now.getTime() - sessionStart) / 1000);
   const isUnsplashConfigured =
     unsplashSettings?.effectiveConfigured ??
-    unsplashSearchResult?.configured ??
     true;
   const unsplashConfigSourceLabel = describeUnsplashConfigSource(
     unsplashSettings?.configSource ?? "none",
   );
-  const canLoadPrevUnsplashPage = (unsplashSearchResult?.page ?? 1) > 1;
-  const canLoadNextUnsplashPage = unsplashSearchResult?.hasNextPage ?? false;
-  const refreshSourceLabel = isUnsplashConfigured ? "Unsplash" : "故宫壁纸";
-  const refreshActionLabel = isUnsplashConfigured
-    ? `下载 ${refreshSourceLabel} 新壁纸`
-    : "获取故宫候选壁纸";
-  const hasPalaceCandidates = palaceStagingWallpapers.length > 0;
   const isPalaceRefreshRunning = palaceRefreshStatus?.state === "running";
-  const palaceRefreshTargetPage =
-    palaceRefreshStatus?.targetPage ?? palaceStagingPage;
-  const palaceControlsDisabled = palaceStagingLoading || isPalaceRefreshRunning;
-  const palaceRefreshProgressText = isPalaceRefreshRunning
-    ? palaceRefreshStatus?.totalEntries &&
-      palaceRefreshStatus.totalEntries > 0
-      ? `正在获取第 ${palaceRefreshTargetPage} 页，已处理 ${palaceRefreshStatus.processedEntries}/${palaceRefreshStatus.totalEntries}`
-      : `正在获取第 ${palaceRefreshTargetPage} 页...`
-    : "";
-  const isPalacePageProcessed =
-    palaceStagingBootstrapped &&
-    !palaceControlsDisabled &&
-    palaceStagingWallpapers.length === 0;
   const selectedLocalWallpaperUrl = selectedLocalWallpaper
     ? convertFileSrc(selectedLocalWallpaper.path)
-    : null;
-  const selectedPalaceStagingWallpaperUrl = selectedPalaceStagingWallpaper
-    ? convertFileSrc(selectedPalaceStagingWallpaper.path)
     : null;
   const isUsingDefaultWallpaperDir = wallpaperStorageSettings?.isDefault ?? true;
 
@@ -1878,51 +1606,6 @@ function App() {
             <p>先由后台抓取一批可用桌面图，再在这里本地预览和挑选，避免页面持续在线请求。</p>
           </div>
         )
-        <div className="wallpaper-console__controls">
-          (
-            <div className="page-controls">
-              <button
-                className="btn btn--soft"
-                type="button"
-                disabled={!canLoadPrevUnsplashPage || unsplashSearchLoading}
-              >
-                上一页
-              </button>
-              <span className="page-controls__text">
-                第 {unsplashSearchResult?.page ?? 1} 页
-                {unsplashSearchResult?.totalPages
-                  ? ` / ${unsplashSearchResult.totalPages}`
-                  : ""}
-              </span>
-              <button
-                className="btn btn--soft"
-                type="button"
-                disabled={!canLoadNextUnsplashPage || unsplashSearchLoading}
-              >
-                下一页
-              </button>
-            </div>
-          )
-          <div className="wallpaper-console__actions">
-            <button
-              className="btn btn--soft"
-              type="button"
-              onClick={() => setWallpaperSettingsOpen((prev) => !prev)}
-              disabled={isPalaceRefreshRunning}
-            >
-              {wallpaperSettingsOpen ? "收起设置" : "壁纸设置"}
-            </button>(
-              <button
-                className="btn btn--primary"
-                type="button"
-                onClick={handleRefreshWallpaper}
-                disabled={wallpaperRefreshPending}
-              >
-                {wallpaperRefreshPending ? "下载中..." : refreshActionLabel}
-              </button>
-            )
-          </div>
-        </div>
 
         {wallpaperSettingsOpen && (
           <div className="wallpaper-storage-panel">
@@ -2045,226 +1728,7 @@ function App() {
           </div>
         )}
       </div>
-
-      <div className="wallpaper-console__grid">
-        <div className="card wallpaper-results-card">
-          <div className="card__header">
-            <div>
-            </div>
-          </div>
-          {palaceStagingError && (
-            <p className="helper-text helper-text--error">{palaceStagingError}</p>
-          )}
-          {palaceBatchMode && (
-            <p className="helper-text">
-              批量模式已开启，点击候选卡片即可切换选中状态，右侧仍会保持预览。
-            </p>
-          )}
-          {!isUnsplashConfigured ? (
-            <div className="empty-state">
-              <h3>还没有配置 Unsplash</h3>
-              <p>
-                {unsplashSearchResult?.errorMessage ??
-                  "先在壁纸设置里填写 Access Key，或继续使用环境变量。"}
-              </p>
-            </div>
-          ) : hasPalaceCandidates ? (
-            <div className="wallpaper-grid">
-              {palaceStagingWallpapers.map((item) => (
-                <button
-                  key={item.sourceUrl}
-                  className={`wallpaper-tile ${
-                    selectedPalaceStagingWallpaper?.sourceUrl === item.sourceUrl
-                      ? "wallpaper-tile--selected"
-                      : ""
-                  } ${
-                    selectedPalaceStageSources.includes(item.sourceUrl)
-                      ? "wallpaper-tile--checked"
-                      : ""
-                  } ${
-                    palaceBatchMode ? "wallpaper-tile--batch" : ""
-                  }`}
-                  type="button"
-                  onClick={() => handleTogglePalaceStageSelection(item.sourceUrl)}
-                  disabled={isPalaceRefreshRunning}
-                >
-                  {palaceBatchMode && (
-                    <span
-                      className={`wallpaper-tile__checkbox ${
-                        selectedPalaceStageSources.includes(item.sourceUrl)
-                          ? "wallpaper-tile__checkbox--checked"
-                          : ""
-                      }`}
-                    >
-                      {selectedPalaceStageSources.includes(item.sourceUrl)
-                        ? "已选"
-                        : "选择"}
-                    </span>
-                  )}
-                  <img src={convertFileSrc(item.path)} alt={item.title} />
-                  <div className="wallpaper-tile__meta">
-                    <strong>{item.title || "故宫壁纸"}</strong>
-                    <span>
-                      {item.width} x {item.height}
-                    </span>
-                    <span>故宫候选</span>
-                    <span>{item.creditName}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : palaceStagingLoading || isPalaceRefreshRunning ? (
-            <div className="empty-state">
-              <h3>正在获取故宫候选壁纸</h3>
-              <p>
-                {isPalaceRefreshRunning
-                  ? `后台正在抓取并缓存第 ${palaceRefreshTargetPage} 页的桌面横屏图片。`
-                  : `正在读取第 ${palaceStagingPage} 页的故宫候选缓存。`}
-              </p>
-            </div>
-          ) : isPalacePageProcessed ? (
-            <div className="empty-state">
-              <h3>当前页候选已处理完成</h3>
-              <p>
-                第 {palaceStagingPage} 页里可加入本地库的候选图已经处理完了，
-                {palaceStagingHasNextPage ? "可以翻到下一页继续挑选。" : "也可以手动刷新当前页再试一次。"}
-              </p>
-            </div>
-          ) : (
-            <div className="empty-state">
-              <h3>还没有故宫候选壁纸</h3>
-              <p>点击上面的“刷新当前页”，后台抓到图片后会直接在这里本地预览。</p>
-            </div>
-          )}
-        </div>
-
-        <div className="card wallpaper-preview-card">
-          {selectedUnsplashWallpaper ? (
-            <>
-              <div className="wallpaper-preview__image">
-                <img
-                  src={selectedUnsplashWallpaper.previewUrl}
-                  alt={describeWallpaper(selectedUnsplashWallpaper)}
-                />
-              </div>
-              <div className="wallpaper-preview__body">
-                <p className="card__eyebrow">在线预览</p>
-                <h2>{describeWallpaper(selectedUnsplashWallpaper)}</h2>
-                <p className="helper-text">
-                  来源 {getRemoteSourceLabel(selectedUnsplashWallpaper.source)}
-                </p>
-                <p className="helper-text">
-                  {selectedUnsplashWallpaper.width} x {selectedUnsplashWallpaper.height}
-                </p>
-                <p className="helper-text">
-                  来源信息{" "}
-                  <a
-                    href={selectedUnsplashWallpaper.creditUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {selectedUnsplashWallpaper.creditName}
-                  </a>
-                </p>
-                <p className={`helper-text helper-text--${wallpaperActionTone}`}>
-                  {wallpaperActionMessage}
-                </p>
-                <div className="preview-actions preview-actions--stack">
-                  <button
-                    className="btn btn--primary"
-                    type="button"
-                    onClick={() => void handleDownloadWallpaper(true)}
-                    disabled={wallpaperActionPending !== ""}
-                  >
-                    {wallpaperActionPending === "fixed"
-                      ? "处理中..."
-                      : "下载并固定"}
-                  </button>
-                  <button
-                    className="btn btn--ghost"
-                    type="button"
-                    onClick={() => void handleDownloadWallpaper(false)}
-                    disabled={wallpaperActionPending !== ""}
-                  >
-                    {wallpaperActionPending === "download"
-                      ? "处理中..."
-                      : "仅下载到本地"}
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : selectedPalaceStagingWallpaper &&
-            selectedPalaceStagingWallpaperUrl ? (
-            <>
-              <div className="wallpaper-preview__image">
-                <img
-                  src={selectedPalaceStagingWallpaperUrl}
-                  alt={selectedPalaceStagingWallpaper.title}
-                />
-              </div>
-              <div className="wallpaper-preview__body">
-                <p className="card__eyebrow">故宫候选预览</p>
-                <h2>{selectedPalaceStagingWallpaper.title || "故宫壁纸"}</h2>
-                <p className="helper-text">
-                  这是一张已经抓到本地缓存的故宫候选图，确认喜欢后再加入壁纸库。
-                </p>
-                <p className="helper-text">
-                  {selectedPalaceStagingWallpaper.width} x{" "}
-                  {selectedPalaceStagingWallpaper.height}
-                </p>
-                <p className="helper-text">
-                  来源信息{" "}
-                  <a
-                    href={selectedPalaceStagingWallpaper.creditUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {selectedPalaceStagingWallpaper.creditName}
-                  </a>
-                </p>
-                <p className={`helper-text helper-text--${wallpaperActionTone}`}>
-                  {wallpaperActionMessage}
-                </p>
-                {palaceBatchMode ? (
-                  <p className="helper-text">
-                    当前处于批量模式，请使用上方工具栏执行全选、批量加入或退出批量模式。
-                  </p>
-                ) : (
-                  <div className="preview-actions preview-actions--stack">
-                    <button
-                      className="btn btn--primary"
-                      type="button"
-                      onClick={() => void handlePromotePalaceWallpaper(false)}
-                      disabled={wallpaperActionPending !== "" || palaceControlsDisabled}
-                    >
-                      {wallpaperActionPending === "promote"
-                        ? "处理中..."
-                        : "加入本地壁纸库"}
-                    </button>
-                    <button
-                      className="btn btn--ghost"
-                      type="button"
-                      onClick={() => void handlePromotePalaceWallpaper(true)}
-                      disabled={wallpaperActionPending !== "" || palaceControlsDisabled}
-                    >
-                      {wallpaperActionPending === "promote-fixed"
-                        ? "处理中..."
-                        : "加入并固定"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="empty-state">
-              <h3>选择一张壁纸开始预览</h3>
-              <p>
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
+      
       <div className="card wallpaper-library">
         <div className="card__header">
           <div>
