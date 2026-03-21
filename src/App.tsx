@@ -297,10 +297,7 @@ function App() {
   const [lockSessionFixedMode, setLockSessionFixedMode] = useState(false);
   const [wallpaperRefreshPending, setWallpaperRefreshPending] = useState(false);
   const [activeView, setActiveView] = useState<AppView>("dashboard");
-  const [activeRemoteSource, setActiveRemoteSource] =
-    useState<RemoteWallpaperSource>("unsplash");
   const [unsplashSearchInput, setUnsplashSearchInput] = useState("");
-  const [unsplashSearchQuery, setUnsplashSearchQuery] = useState("");
   const [unsplashSearchResult, setUnsplashSearchResult] =
     useState<RemoteWallpaperSearchResult | null>(null);
   const [unsplashSearchLoading, setUnsplashSearchLoading] = useState(false);
@@ -551,42 +548,6 @@ function App() {
     }
   }, []);
 
-  const runUnsplashSearch = useCallback(
-    async (query: string, page: number) => {
-      if (isLockWindow) return;
-      setUnsplashSearchLoading(true);
-      setUnsplashSearchError(null);
-      try {
-        const result = await invoke<RemoteWallpaperSearchResult>(
-          "search_unsplash_wallpapers",
-          {
-            query,
-            page,
-            perPage: WALLPAPER_PAGE_SIZE,
-          },
-        );
-        setUnsplashSearchQuery(query);
-        setUnsplashSearchResult(result);
-        setSelectedUnsplashWallpaperId((prev) =>
-          result.items.some((item) => item.id === prev)
-            ? prev
-            : result.items[0]?.id ?? null,
-        );
-        if (!result.configured) {
-          setActiveRemoteSource((prev) =>
-            prev === "unsplash" ? "palace" : prev,
-          );
-        }
-      } catch (error) {
-        console.error("搜索 Unsplash 壁纸失败", error);
-        setUnsplashSearchError(describeWallpaperError(error));
-      } finally {
-        setUnsplashSearchLoading(false);
-      }
-    },
-    [isLockWindow],
-  );
-
   const applyPalaceStagingResult = useCallback(
     (result: PalaceStagingBatchResult) => {
       setPalaceStagingWallpapers(result.items);
@@ -817,7 +778,6 @@ function App() {
       }
       if (result.sourceKind === "palace") {
         setActiveView("wallpapers");
-        setActiveRemoteSource("palace");
         setPalaceStagingBootstrapped(true);
         await loadPalaceStagingWallpapers();
         return;
@@ -835,14 +795,6 @@ function App() {
     unsplashSearchResult,
     wallpaperRefreshPending,
   ]);
-
-  const handleUnsplashSearchSubmit = useCallback(
-    async (event?: FormEvent<HTMLFormElement>) => {
-      event?.preventDefault();
-      await runUnsplashSearch(unsplashSearchInput, 1);
-    },
-    [runUnsplashSearch, unsplashSearchInput],
-  );
 
   const handlePickWallpaperFolder = useCallback(async () => {
     if (palaceRefreshStatus?.state === "running") return;
@@ -978,9 +930,6 @@ function App() {
       setUnsplashAccessKeyInput("");
       setUnsplashSettingsTone("success");
       setUnsplashSettingsMessage("Unsplash Access Key 已保存，现在可以直接搜索和下载壁纸。");
-      if (activeView === "wallpapers") {
-        void runUnsplashSearch(unsplashSearchInput, 1);
-      }
     } catch (error) {
       console.error("保存 Unsplash Access Key 失败", error);
       setUnsplashSettingsTone("error");
@@ -992,7 +941,6 @@ function App() {
     activeView,
     isLockWindow,
     palaceRefreshStatus,
-    runUnsplashSearch,
     unsplashAccessKeyInput,
     unsplashSearchInput,
     unsplashSettingsPending,
@@ -1018,14 +966,8 @@ function App() {
         setUnsplashSettingsMessage(
           `已清除应用内 Access Key，当前继续使用 ${describeUnsplashConfigSource(settings.configSource)}。`,
         );
-        if (activeView === "wallpapers") {
-          void runUnsplashSearch(unsplashSearchInput, 1);
-        }
       } else {
         setUnsplashSettingsMessage("已清除应用内 Access Key，当前会继续使用故宫来源。");
-        if (activeRemoteSource === "unsplash") {
-          setActiveRemoteSource("palace");
-        }
       }
     } catch (error) {
       console.error("清除 Unsplash Access Key 失败", error);
@@ -1035,11 +977,9 @@ function App() {
       setUnsplashSettingsPending(false);
     }
   }, [
-    activeRemoteSource,
     activeView,
     isLockWindow,
     palaceRefreshStatus,
-    runUnsplashSearch,
     unsplashSearchInput,
     unsplashSettingsPending,
   ]);
@@ -1474,16 +1414,9 @@ function App() {
       const effectiveConfigured =
         settings?.effectiveConfigured ??
         (unsplashSettings?.effectiveConfigured ?? false);
-      if (effectiveConfigured) {
-        if (!unsplashSearchResult && !unsplashSearchLoading && !unsplashSearchError) {
-          await runUnsplashSearch(unsplashSearchInput, 1);
-        }
-      } else if (activeRemoteSource === "unsplash") {
-        setActiveRemoteSource("palace");
-      }
 
       if (
-        (activeRemoteSource === "palace" || !effectiveConfigured) &&
+        (!effectiveConfigured) &&
         !palaceStagingBootstrapped &&
         !palaceStagingLoading
       ) {
@@ -1499,7 +1432,6 @@ function App() {
     })();
   }, [
     activeView,
-    activeRemoteSource,
     isLockWindow,
     loadLocalWallpapers,
     loadUnsplashSettings,
@@ -1509,7 +1441,6 @@ function App() {
     palaceStagingBootstrapped,
     palaceStagingLoading,
     refreshPalaceStagingBatch,
-    runUnsplashSearch,
     unsplashSearchError,
     unsplashSearchInput,
     unsplashSearchLoading,
@@ -1520,14 +1451,12 @@ function App() {
   useEffect(() => {
     if (isLockWindow || activeView !== "wallpapers") return;
     if (
-      activeRemoteSource !== "palace" &&
       unsplashSettings?.effectiveConfigured !== false
     ) {
       return;
     }
     void loadPalaceRefreshStatus();
   }, [
-    activeRemoteSource,
     activeView,
     isLockWindow,
     loadPalaceRefreshStatus,
@@ -1862,7 +1791,6 @@ function App() {
   const isPalacePageProcessed =
     palaceStagingBootstrapped &&
     !palaceControlsDisabled &&
-    activeRemoteSource === "palace" &&
     palaceStagingWallpapers.length === 0;
   const selectedLocalWallpaperUrl = selectedLocalWallpaper
     ? convertFileSrc(selectedLocalWallpaper.path)
@@ -1928,28 +1856,13 @@ function App() {
         </div>
         <div className="wallpaper-source-tabs">
           <button
-            className={`view-tab ${
-              activeRemoteSource === "unsplash" ? "view-tab--active" : ""
-            }`}
             type="button"
             disabled={!isUnsplashConfigured}
-            onClick={() => {
-              setActiveRemoteSource("unsplash");
-              if (!unsplashSearchResult && !unsplashSearchLoading) {
-                void runUnsplashSearch(unsplashSearchInput, 1);
-              }
-            }}
           >
             Unsplash
           </button>
           <button
-            className={`view-tab ${
-              activeRemoteSource === "palace" ? "view-tab--active" : ""
-            }`}
             type="button"
-            onClick={() => {
-              setActiveRemoteSource("palace");
-            }}
           >
             故宫壁纸
           </button>
@@ -1959,45 +1872,18 @@ function App() {
             Unsplash 需要先配置 Access Key。你可以在“壁纸设置”里填写，当前会自动使用故宫来源。
           </p>
         )}
-        {activeRemoteSource === "unsplash" ? (
-          <form
-            className="wallpaper-search"
-            onSubmit={(event) => void handleUnsplashSearchSubmit(event)}
-          >
-            <input
-              className="wallpaper-search__input"
-              type="text"
-              placeholder="搜索关键字，例如 mountain、forest、ocean"
-              value={unsplashSearchInput}
-              onChange={(event) => setUnsplashSearchInput(event.target.value)}
-              disabled={!isUnsplashConfigured}
-            />
-            <button
-              className="btn btn--ghost"
-              type="submit"
-              disabled={unsplashSearchLoading || !isUnsplashConfigured}
-            >
-              {unsplashSearchLoading ? "搜索中..." : "搜索壁纸"}
-            </button>
-          </form>
-        ) : (
+        (
           <div className="empty-state wallpaper-source-note">
             <h3>故宫来源改为本地候选批次</h3>
             <p>先由后台抓取一批可用桌面图，再在这里本地预览和挑选，避免页面持续在线请求。</p>
           </div>
-        )}
+        )
         <div className="wallpaper-console__controls">
-          {activeRemoteSource === "unsplash" ? (
+          (
             <div className="page-controls">
               <button
                 className="btn btn--soft"
                 type="button"
-                onClick={() =>
-                  void runUnsplashSearch(
-                    unsplashSearchQuery,
-                    Math.max(1, (unsplashSearchResult?.page ?? 1) - 1),
-                  )
-                }
                 disabled={!canLoadPrevUnsplashPage || unsplashSearchLoading}
               >
                 上一页
@@ -2011,43 +1897,12 @@ function App() {
               <button
                 className="btn btn--soft"
                 type="button"
-                onClick={() =>
-                  void runUnsplashSearch(
-                    unsplashSearchQuery,
-                    (unsplashSearchResult?.page ?? 1) + 1,
-                  )
-                }
                 disabled={!canLoadNextUnsplashPage || unsplashSearchLoading}
               >
                 下一页
               </button>
             </div>
-          ) : (
-            <div className="page-controls">
-              <button
-                className="btn btn--soft"
-                type="button"
-                onClick={() => void handlePalacePageChange(palaceStagingPage - 1)}
-                disabled={!palaceStagingHasPrevPage || palaceControlsDisabled}
-              >
-                上一页
-              </button>
-              <span className="page-controls__text">
-                第 {palaceStagingPage} 页 / {palaceStagingMaxPage}
-              </span>
-              <button
-                className="btn btn--soft"
-                type="button"
-                onClick={() => void handlePalacePageChange(palaceStagingPage + 1)}
-                disabled={!palaceStagingHasNextPage || palaceControlsDisabled}
-              >
-                下一页
-              </button>
-              <span className="page-controls__text">
-                当前候选 {palaceStagingWallpapers.length} 张
-              </span>
-            </div>
-          )}
+          )
           <div className="wallpaper-console__actions">
             <button
               className="btn btn--soft"
@@ -2056,91 +1911,7 @@ function App() {
               disabled={isPalaceRefreshRunning}
             >
               {wallpaperSettingsOpen ? "收起设置" : "壁纸设置"}
-            </button>
-            {activeRemoteSource === "palace" ? (
-              palaceBatchMode ? (
-                <>
-                  <span className="page-controls__text">
-                    已选 {selectedPalaceStageCount} 张
-                  </span>
-                  <button
-                    className="btn btn--soft"
-                    type="button"
-                    onClick={handleSelectAllPalaceStage}
-                    disabled={!hasPalaceCandidates || palaceControlsDisabled}
-                  >
-                    全选本页
-                  </button>
-                  <button
-                    className="btn btn--soft"
-                    type="button"
-                    onClick={handleClearPalaceStageSelection}
-                    disabled={
-                      selectedPalaceStageCount === 0 || palaceControlsDisabled
-                    }
-                  >
-                    取消选择
-                  </button>
-                  <button
-                    className="btn btn--primary"
-                    type="button"
-                    onClick={() => void handlePromoteSelectedPalaceWallpapers()}
-                    disabled={
-                      selectedPalaceStageCount === 0 ||
-                      wallpaperActionPending !== "" ||
-                      palaceControlsDisabled
-                    }
-                  >
-                    {wallpaperActionPending === "promote-bulk"
-                      ? "处理中..."
-                      : "批量加入本地壁纸库"}
-                  </button>
-                  <button
-                    className="btn btn--ghost"
-                    type="button"
-                    onClick={handleExitPalaceBatchMode}
-                    disabled={palaceControlsDisabled}
-                  >
-                    退出批量模式
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    className="btn btn--soft"
-                    type="button"
-                    onClick={() => void handlePromoteAllPalaceWallpapers()}
-                    disabled={
-                      !hasPalaceCandidates ||
-                      palaceControlsDisabled ||
-                      wallpaperActionPending !== ""
-                    }
-                  >
-                    {wallpaperActionPending === "promote-bulk"
-                      ? "处理中..."
-                      : "全部加入本地壁纸库"}
-                  </button>
-                  <button
-                    className="btn btn--soft"
-                    type="button"
-                    onClick={handleEnterPalaceBatchMode}
-                    disabled={!hasPalaceCandidates || palaceControlsDisabled}
-                  >
-                    批量选择
-                  </button>
-                  <button
-                    className="btn btn--primary"
-                    type="button"
-                    onClick={() =>
-                      void refreshPalaceStagingBatch("manual", palaceStagingPage)
-                    }
-                    disabled={palaceControlsDisabled}
-                  >
-                    {isPalaceRefreshRunning ? "获取中..." : "刷新当前页"}
-                  </button>
-                </>
-              )
-            ) : (
+            </button>(
               <button
                 className="btn btn--primary"
                 type="button"
@@ -2149,12 +1920,9 @@ function App() {
               >
                 {wallpaperRefreshPending ? "下载中..." : refreshActionLabel}
               </button>
-            )}
+            )
           </div>
         </div>
-        {activeRemoteSource === "palace" && palaceRefreshProgressText && (
-          <p className="helper-text">{palaceRefreshProgressText}</p>
-        )}
 
         {wallpaperSettingsOpen && (
           <div className="wallpaper-storage-panel">
@@ -2282,30 +2050,17 @@ function App() {
         <div className="card wallpaper-results-card">
           <div className="card__header">
             <div>
-              <p className="card__eyebrow">
-                {activeRemoteSource === "unsplash" ? "在线图库" : "故宫候选库"}
-              </p>
-              <h2>
-                {activeRemoteSource === "unsplash"
-                  ? "Unsplash 在线浏览"
-                  : "故宫候选批次"}
-              </h2>
             </div>
-            <span className="helper-text">
-              {activeRemoteSource === "unsplash"
-                ? `每页 ${WALLPAPER_PAGE_SIZE} 张`
-                : `第 ${palaceStagingPage} 页候选 ${palaceStagingWallpapers.length} 张`}
-            </span>
           </div>
-          {activeRemoteSource === "palace" && palaceStagingError && (
+          {palaceStagingError && (
             <p className="helper-text helper-text--error">{palaceStagingError}</p>
           )}
-          {activeRemoteSource === "palace" && palaceBatchMode && (
+          {palaceBatchMode && (
             <p className="helper-text">
               批量模式已开启，点击候选卡片即可切换选中状态，右侧仍会保持预览。
             </p>
           )}
-          {activeRemoteSource === "unsplash" && !isUnsplashConfigured ? (
+          {!isUnsplashConfigured ? (
             <div className="empty-state">
               <h3>还没有配置 Unsplash</h3>
               <p>
@@ -2313,48 +2068,6 @@ function App() {
                   "先在壁纸设置里填写 Access Key，或继续使用环境变量。"}
               </p>
             </div>
-          ) : activeRemoteSource === "unsplash" ? (
-            <>
-              {unsplashSearchError && (
-                <p className="helper-text helper-text--error">{unsplashSearchError}</p>
-              )}
-              {unsplashSearchLoading ? (
-                <div className="empty-state">
-                  <h3>正在加载在线壁纸</h3>
-                  <p>正在加载 Unsplash 当前页数据。</p>
-                </div>
-              ) : unsplashSearchResult?.items.length ? (
-                <div className="wallpaper-grid">
-                  {unsplashSearchResult.items.map((item) => (
-                    <button
-                      key={item.id}
-                      className={`wallpaper-tile ${
-                        selectedUnsplashWallpaper?.id === item.id
-                          ? "wallpaper-tile--selected"
-                          : ""
-                      }`}
-                      type="button"
-                      onClick={() => setSelectedUnsplashWallpaperId(item.id)}
-                    >
-                      <img src={item.thumbUrl} alt={describeWallpaper(item)} />
-                      <div className="wallpaper-tile__meta">
-                        <strong>{describeWallpaper(item)}</strong>
-                        <span>
-                          {item.width} x {item.height}
-                        </span>
-                        <span>{getRemoteSourceLabel(item.source)}</span>
-                        <span>{item.creditName}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <h3>没有找到符合条件的壁纸</h3>
-                  <p>试试更宽泛一点的关键词，或者直接浏览默认壁纸主题。</p>
-                </div>
-              )}
-            </>
           ) : hasPalaceCandidates ? (
             <div className="wallpaper-grid">
               {palaceStagingWallpapers.map((item) => (
@@ -2426,7 +2139,7 @@ function App() {
         </div>
 
         <div className="card wallpaper-preview-card">
-          {activeRemoteSource === "unsplash" && selectedUnsplashWallpaper ? (
+          {selectedUnsplashWallpaper ? (
             <>
               <div className="wallpaper-preview__image">
                 <img
@@ -2480,8 +2193,7 @@ function App() {
                 </div>
               </div>
             </>
-          ) : activeRemoteSource === "palace" &&
-            selectedPalaceStagingWallpaper &&
+          ) : selectedPalaceStagingWallpaper &&
             selectedPalaceStagingWallpaperUrl ? (
             <>
               <div className="wallpaper-preview__image">
@@ -2547,9 +2259,6 @@ function App() {
             <div className="empty-state">
               <h3>选择一张壁纸开始预览</h3>
               <p>
-                {activeRemoteSource === "unsplash"
-                  ? "右侧会显示大图、作者信息，以及下载动作。"
-                  : "右侧会显示故宫候选壁纸的大图预览，并决定是否加入本地库。"}
               </p>
             </div>
           )}

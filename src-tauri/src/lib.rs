@@ -599,8 +599,8 @@ async fn show_lock_windows(
         let window = WebviewWindowBuilder::new(&app, label.clone(), WebviewUrl::App(url.into()))
             .decorations(false)
             .transparent(false)
-            .resizable(false)
-            .always_on_top(true)
+            .resizable(true)
+            .always_on_top(false)
             .skip_taskbar(true)
             .position(x, y)
             .inner_size(width, height)
@@ -608,7 +608,7 @@ async fn show_lock_windows(
             .map_err(|err| err.to_string())?;
 
         apply_default_window_icon(&app, &window);
-        let _ = window.set_fullscreen(true);
+        let _ = window.set_fullscreen(false);
         let _ = window.set_focus();
         labels.push(label);
     }
