@@ -422,13 +422,13 @@ function App() {
   useEffect(() => {
     if (isLockWindow) return;
     if (!showLockScreen) return;
-    invoke("broadcast_lock_update", {
-      timeText,
-      dateText,
-      restCountdown,
-      restPaused,
-      allowEscExit,
-    }).catch((error) => console.error("锁屏数据同步失败", error));
+    // invoke("broadcast_lock_update", {
+    //   timeText,
+    //   dateText,
+    //   restCountdown,
+    //   restPaused,
+    //   allowEscExit,
+    // }).catch((error) => console.error("锁屏数据同步失败", error));
   }, [
     isLockWindow,
     showLockScreen,
@@ -444,13 +444,13 @@ function App() {
     if (isLockWindow) return;
     if (!showLockScreen) return;
     const timer = setInterval(() => {
-      invoke("broadcast_lock_update", {
-        timeText,
-        dateText,
-        restCountdown,
-        restPaused,
-        allowEscExit,
-      }).catch((error) => console.error("锁屏数据同步失败", error));
+      // invoke("broadcast_lock_update", {
+      //   timeText,
+      //   dateText,
+      //   restCountdown,
+      //   restPaused,
+      //   allowEscExit,
+      // }).catch((error) => console.error("锁屏数据同步失败", error));
     }, 1000);
     return () => clearInterval(timer);
   }, [
@@ -720,6 +720,67 @@ function App() {
             </section>
           </>
         </>
+      )}
+      
+      {isLockWindow && (
+        <div
+          className="lockscreen"
+        >
+          <div className="lockscreen__scrim" />
+          <div className="lockscreen__nav">
+            <button
+              className="lockscreen__nav-btn"
+              type="button"
+              aria-label="上一张壁纸"
+            >
+              {"<"}
+            </button>
+            <button
+              className="lockscreen__nav-btn"
+              type="button"
+              aria-label="下一张壁纸"
+            >
+              {">"}
+            </button>
+          </div>
+          <div className="lockscreen__content">
+            <div className="lockscreen__top">
+              <div>
+                <p className="lockscreen__time">{lockPayload.timeText}</p>
+                <p className="lockscreen__date">{lockPayload.dateText}</p>
+              </div>
+              <div />
+            </div>
+            <div className="lockscreen__center">
+              <p>休息一下，放松眼睛</p>
+              <div className="lockscreen__timer">
+                <p className="lockscreen__timer-label">剩余时间</p>
+                <div
+                  className={`lockscreen__timer-value ${
+                    lockPayload.restPaused ? "is-paused" : ""
+                  }`}
+                >
+                  {lockPayload.restCountdown.replaceAll(":", " : ")}
+                </div>
+                <p className="lockscreen__timer-hint">
+                  {lockPayload.restPaused
+                    ? "计时已暂停，点击继续恢复倒计时"
+                    : "闭眼 20 秒，眺望远处 20 秒"}
+                </p>
+              </div>
+              <p className="lockscreen__quote">
+                “短暂离开屏幕，给眼睛一次深呼吸。”
+              </p>
+            </div>
+            <div className="lockscreen__actions">
+              {lockPayload.allowEscExit ? (
+                <span className="helper-text">ESC 退出已开启</span>
+              ) : (
+                <span className="helper-text">ESC 已禁用</span>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
