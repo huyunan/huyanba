@@ -944,6 +944,7 @@ input[type="range"] {
 .lockscreen__scrim {
   position: absolute;
   inset: 0;
+  opacity: 0.1;
   background-image: var(--lockscreen-bg),
     radial-gradient(circle at top, rgba(23, 44, 48, 0.28), rgba(12, 23, 26, 0.7)),
     linear-gradient(135deg, rgba(20, 42, 40, 0.55), rgba(6, 20, 22, 0.8));

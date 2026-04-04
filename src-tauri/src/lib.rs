@@ -336,19 +336,6 @@ fn hide_lock_windows(
 }
 
 #[tauri::command]
-fn broadcast_lock_update(app: tauri::AppHandle, payload: LockUpdate) -> Result<(), String> {
-    if let Some(state) = app.try_state::<LockState>() {
-        if let Ok(mut last) = state.last_update.lock() {
-            *last = Some(payload.clone());
-        }
-    }
-    for (_label, window) in app.webview_windows() {
-        let _ = window.emit("lockscreen-update", payload.clone());
-    }
-    Ok(())
-}
-
-#[tauri::command]
 fn get_lock_update(state: tauri::State<'_, LockState>) -> Option<LockUpdate> {
     state
         .last_update
@@ -598,7 +585,6 @@ pub fn run() {
             reset_gamma,
             show_lock_windows,
             hide_lock_windows,
-            broadcast_lock_update,
             get_lock_update,
             lockscreen_action,
             get_wallpaper_storage_settings,

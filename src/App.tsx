@@ -419,50 +419,6 @@ function App() {
   });
   const usageText = formatUsage((now.getTime() - sessionStart) / 1000);
 
-  useEffect(() => {
-    if (isLockWindow) return;
-    if (!showLockScreen) return;
-    // invoke("broadcast_lock_update", {
-    //   timeText,
-    //   dateText,
-    //   restCountdown,
-    //   restPaused,
-    //   allowEscExit,
-    // }).catch((error) => console.error("锁屏数据同步失败", error));
-  }, [
-    isLockWindow,
-    showLockScreen,
-    timeText,
-    dateText,
-    restCountdown,
-    restPaused,
-    allowEscExit,
-  ]);
-
-
-  useEffect(() => {
-    if (isLockWindow) return;
-    if (!showLockScreen) return;
-    const timer = setInterval(() => {
-      // invoke("broadcast_lock_update", {
-      //   timeText,
-      //   dateText,
-      //   restCountdown,
-      //   restPaused,
-      //   allowEscExit,
-      // }).catch((error) => console.error("锁屏数据同步失败", error));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [
-    isLockWindow,
-    showLockScreen,
-    timeText,
-    dateText,
-    restCountdown,
-    restPaused,
-    allowEscExit,
-  ]);
-
   return (
     <div className="app">
       {!isLockWindow && (
@@ -727,22 +683,6 @@ function App() {
           className="lockscreen"
         >
           <div className="lockscreen__scrim" />
-          <div className="lockscreen__nav">
-            <button
-              className="lockscreen__nav-btn"
-              type="button"
-              aria-label="上一张壁纸"
-            >
-              {"<"}
-            </button>
-            <button
-              className="lockscreen__nav-btn"
-              type="button"
-              aria-label="下一张壁纸"
-            >
-              {">"}
-            </button>
-          </div>
           <div className="lockscreen__content">
             <div className="lockscreen__top">
               <div>
