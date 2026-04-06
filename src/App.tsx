@@ -67,7 +67,6 @@ function App() {
   const [lockEndAtMs, setLockEndAtMs] = useState<number | null>(null);
   const [lockPausedLocal, setLockPausedLocal] = useState(false);
   const [lockRemainingLocal, setLockRemainingLocal] = useState(0);
-  const [activeView, setActiveView] = useState<AppView>("dashboard");
   const exitInProgressRef = useRef(false);
   const exitRestRef = useRef<() => void>(() => {});
   const togglePauseRef = useRef<() => void>(() => {});
@@ -443,52 +442,20 @@ function App() {
             </div>
           </header>
 
-          <div className="view-switcher">
-            <button
-              className={`view-tab ${
-                activeView === "dashboard" ? "view-tab--active" : ""
-              }`}
-              type="button"
-              onClick={() => setActiveView("dashboard")}
-            >
-              护眼首页
-            </button>
-          </div>
-
           <>
             <section className="hero">
               <div className="hero__text">
                 <p className="hero__kicker">今日护眼状态</p>
                 <h1>保持专注，但别忘了松一口气。</h1>
-                <p className="hero__subtitle">
-                  根据你的作息自动调节屏幕色温与休息节奏，让眼睛更舒适。
-                </p>
                 <div className="hero__stats">
                   <div>
-                    <p className="stat__label">连续使用</p>
+                    <p className="stat__label">今日休息次数</p>
                     <p className="stat__value">{usageText}</p>
                   </div>
                   <div>
                     <p className="stat__label">下一次休息</p>
                     <p className="stat__value">{nextRestCountdown}</p>
                   </div>
-                </div>
-              </div>
-              <div className="hero__panel">
-                <div className="hero__orb" />
-                <div className="hero__panel-inner">
-                  <p className="hero__panel-title">护眼模式已开启</p>
-                  <p className="hero__panel-desc">
-                    当前为 <strong>{activePreset}</strong> 预设，过滤强度{" "}
-                    <strong>{filterStrength}%</strong>。
-                  </p>
-                  <button
-                    className="btn btn--primary"
-                    type="button"
-                    onClick={handleStartRest}
-                  >
-                    进入专注模式
-                  </button>
                 </div>
               </div>
             </section>
@@ -654,23 +621,6 @@ function App() {
                       <span className="toggle__track" />
                     </label>
                   </label>
-                </div>
-              </div>
-            </section>
-
-            <section className="preview-row preview-row--single">
-              <div className="card card--status">
-                <p className="card__eyebrow">今日提示</p>
-                <h3>休息 6 分钟即可恢复 30% 视觉疲劳</h3>
-                <div className="status-list">
-                  <div>
-                    <p className="stat__label">过滤强度</p>
-                    <p className="stat__value">{filterStrength}%</p>
-                  </div>
-                  <div>
-                    <p className="stat__label">建议眨眼频率</p>
-                    <p className="stat__value">18 次/分钟</p>
-                  </div>
                 </div>
               </div>
             </section>
