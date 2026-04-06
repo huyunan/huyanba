@@ -13,7 +13,7 @@ use tauri::{
     menu::MenuBuilder,
     path::BaseDirectory,
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent,
+    AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent,
 };
 use windows::Win32::Foundation::HWND;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC};
@@ -322,6 +322,15 @@ fn hide_lock_windows(
     Ok(())
 }
 
+#[tauri::command]
+fn lockscreen_action(app: tauri::AppHandle, action: String) -> Result<(), String> {
+    append_app_log(&app, &format!("锁屏动作: {}", action));
+    for (_label, window) in app.webview_windows() {
+        let _ = window.emit("lockscreen-action", action.clone());
+    }
+    Ok(())
+}
+
 fn now_ts() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -534,6 +543,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             set_gamma,
             reset_gamma,
+            lockscreen_action,
             show_lock_windows,
             hide_lock_windows,
             log_app

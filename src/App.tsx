@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
@@ -114,18 +115,61 @@ function App() {
     const endAt = restDuraAt();
     setRestEndAt(endAt);
     setShowLockScreen(true);
+    showLockWindows();
   }, [restDuration]);
+  
+  const showLockWindows = () => {
+    const endAt = restEndAt ?? restDuraAt();
+    invoke("show_lock_windows", {
+      endAtMs: endAt.getTime(),
+    }).catch((error) => console.error("锁屏窗口创建失败", error));
+  }
+  
+  const hideLockWindows = () => {
+    invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
+    invoke("hide_lock_windows").catch((error) =>
+      console.error("锁屏窗口关闭失败", error),
+    );
+  }  
   
   useEffect(() => {
     if (!showLockScreen) return;
     setRestEndAt(restDuraAt());
   }, [restDuration, showLockScreen]);
 
+    const appWebview = getCurrentWebviewWindow();
+    appWebview
+      .listen<string>("lockscreen-action", (event) => {
+        if (event.payload === "exit") {
+          handleExitRest();
+        }
+      })
+      .catch((error) => console.error("监听锁屏动作失败", error));
+  // useEffect(() => {
+  //   let unlisten: (() => void) | undefined;
+  //   const appWebview = getCurrentWebviewWindow();
+  //   appWebview
+  //     .listen<string>("lockscreen-action", (event) => {
+  //       if (event.payload === "exit") {
+  //         handleExitRest();
+  //       }
+  //     })
+  //     .then((fn) => {
+  //       unlisten = fn;
+  //     })
+  //     .catch((error) => console.error("监听锁屏动作失败", error));
+
+  //   return () => {
+  //     if (unlisten) {
+  //       unlisten();
+  //     }
+  //   };
+  // }, []);
+  
   const handleExitRest = useCallback(() => {
     invoke("log_app", { message: "前端退出休息: start" }).catch(() => undefined);
-    console.log('hyn handleExitRest 1', isLockWindow, showLockScreen)
     setShowLockScreen(false);
-    console.log('hyn handleExitRest 2', isLockWindow, showLockScreen)
+    hideLockWindows();
     setRestEndAt(null);
     if (restEnabled) {
       setNextRestAt(restMsAt());
@@ -187,30 +231,6 @@ function App() {
   }, [isLockWindow, filterEnabled, filterStrength, colorTemp]);
 
   useEffect(() => {
-    console.log('hyn isLockWindow 1', isLockWindow, showLockScreen)
-    if (isLockWindow) return;
-    console.log('hyn isLockWindow 2', isLockWindow, showLockScreen)
-    if (showLockScreen) {
-      console.log('showLockScreen 1', restDuration, restEndAt)
-      const endAt = restEndAt ?? restDuraAt();
-      invoke("show_lock_windows", {
-        endAtMs: endAt.getTime(),
-      }).catch((error) => console.error("锁屏窗口创建失败", error));
-    } else {
-      console.log('showLockScreen 2', restDuration, restEndAt)
-      invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
-      invoke("hide_lock_windows").catch((error) =>
-        console.error("锁屏窗口关闭失败", error),
-      );
-    }
-  }, [
-    isLockWindow,
-    showLockScreen,
-    restEndAt,
-    restDuration,
-  ]);
-
-  useEffect(() => {
     if (!isLockWindow) return;
     const params = new URLSearchParams(window.location.search);
     const end = Number(params.get("end") || 0);
@@ -259,18 +279,16 @@ function App() {
     if (!restEnabled || showLockScreen) return;
     if (!nextRestAt) return;
     if (now.getTime() >= nextRestAt.getTime()) {
-    console.log('hyn useEffect1 3', showLockScreen)
       const endAt = restDuraAt();
       setRestEndAt(endAt);
       setShowLockScreen(true);
+      showLockWindows();
     }
   }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
 
   useEffect(() => {
     if (!showLockScreen || !restEndAt) return;
-    console.log('hyn useEffect2 22', isLockWindow, showLockScreen)
     if (now.getTime() >= restEndAt.getTime()) {
-    console.log('hyn useEffect2 3', isLockWindow, showLockScreen)
       handleExitRest();
     }
   }, [handleExitRest, now, restEndAt, showLockScreen]);
@@ -529,7 +547,7 @@ function App() {
                 className="view-tab"
                 type="button"
                 onClick={() => {
-                  invoke("hide_lock_windows").catch((error) =>
+                  invoke("lockscreen_action", {action: "exit"}).catch((error) =>
                     console.error("锁屏窗口关闭失败", error),
                   )}
                 }
