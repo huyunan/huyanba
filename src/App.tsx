@@ -56,7 +56,6 @@ function App() {
     restCountdown: "00:00:00",
   });
   const [lockEndAtMs, setLockEndAtMs] = useState<number | null>(null);
-  const exitInProgressRef = useRef(false);
   const exitRestRef = useRef<() => void>(() => {});
   const togglePauseRef = useRef<() => void>(() => {});
 
@@ -105,15 +104,12 @@ function App() {
   }, [activePreset, resolvePreset]);
 
   const handleStartRest = useCallback(() => {
-    exitInProgressRef.current = false;
     const endAt = new Date(Date.now() + restDuration * 60 * 1000);
     setRestEndAt(endAt);
     setShowLockScreen(true);
   }, [restDuration]);
 
   const handleExitRest = useCallback(() => {
-    if (exitInProgressRef.current) return;
-    exitInProgressRef.current = true;
     invoke("log_app", { message: "前端退出休息: start" }).catch(() => undefined);
     setShowLockScreen(false);
     setRestEndAt(null);
@@ -138,21 +134,11 @@ function App() {
     filterStrength,
     colorTemp,
   ]);
-  
-  useEffect(() => {
-    exitRestRef.current = handleExitRest;
-  }, [handleExitRest]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    if (showLockScreen) {
-      exitInProgressRef.current = false;
-    }
-  }, [showLockScreen]);
 
   useEffect(() => {
     if (isLockWindow) return;
@@ -239,6 +225,7 @@ function App() {
       ...prev,
     }));
   }, [isLockWindow]);
+  
   useEffect(() => {
     if (!isLockWindow) return;
     const timer = setInterval(() => {
@@ -525,7 +512,6 @@ function App() {
                 <div className="card__header">
                   <div>
                     <p className="card__eyebrow">系统设置</p>
-                    <h2>快捷与托盘</h2>
                   </div>
                 </div>
 
@@ -556,7 +542,7 @@ function App() {
         </>
       )}
       
-      {!isLockWindow && (
+      {isLockWindow && (
         <div
           className="lockscreen"
         >
