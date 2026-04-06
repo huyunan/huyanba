@@ -137,6 +137,8 @@ function App() {
     setRestEndAt(restDuraAt());
   }, [restDuration, showLockScreen]);
 
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
     const appWebview = getCurrentWebviewWindow();
     appWebview
       .listen<string>("lockscreen-action", (event) => {
@@ -144,27 +146,17 @@ function App() {
           handleExitRest();
         }
       })
+      .then((fn) => {
+        unlisten = fn;
+      })
       .catch((error) => console.error("监听锁屏动作失败", error));
-  // useEffect(() => {
-  //   let unlisten: (() => void) | undefined;
-  //   const appWebview = getCurrentWebviewWindow();
-  //   appWebview
-  //     .listen<string>("lockscreen-action", (event) => {
-  //       if (event.payload === "exit") {
-  //         handleExitRest();
-  //       }
-  //     })
-  //     .then((fn) => {
-  //       unlisten = fn;
-  //     })
-  //     .catch((error) => console.error("监听锁屏动作失败", error));
 
-  //   return () => {
-  //     if (unlisten) {
-  //       unlisten();
-  //     }
-  //   };
-  // }, []);
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
   
   const handleExitRest = useCallback(() => {
     invoke("log_app", { message: "前端退出休息: start" }).catch(() => undefined);
