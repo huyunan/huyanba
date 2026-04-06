@@ -31,12 +31,19 @@ function App() {
   const isLockWindow =
     new URLSearchParams(window.location.search).get("lockscreen") === "1";
   const [now, setNow] = useState(new Date());
+  // 过滤蓝光开关
   const [filterEnabled, setFilterEnabled] = useState(true);
+  // 强度
   const [filterStrength, setFilterStrength] = useState(30);
+  // 色调
   const [colorTemp, setColorTemp] = useState(4700);
+  // 休息节奏开关
   const [restEnabled, setRestEnabled] = useState(true);
-  const [restMinutes, setRestMinutes] = useState(30);
-  const [restDuration, setRestDuration] = useState(2);
+  // 休息间隔
+  const [restMinutes, setRestMinutes] = useState(50);
+  // 休息时间
+  const [restDuration, setRestDuration] = useState(3);
+  // 显示锁屏弹框
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
   const [nextRestAt, setNextRestAt] = useState<Date | null>(null);
