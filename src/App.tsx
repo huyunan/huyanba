@@ -47,12 +47,15 @@ function App() {
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
   const [nextRestAt, setNextRestAt] = useState<Date | null>(null);
+  // 休息结束时间（未弹出锁屏窗口前）
   const [restEndAt, setRestEndAt] = useState<Date | null>(null);
+  // 锁屏数据
   const [lockPayload, setLockPayload] = useState({
     timeText: "--:--",
     dateText: "",
     restCountdown: "00:00",
   });
+  // 休息结束时间（已弹出锁屏窗口）
   const [lockEndAtMs, setLockEndAtMs] = useState<number | null>(null);
 
   const presets = useMemo(
@@ -105,6 +108,15 @@ function App() {
     setShowLockScreen(true);
   }, [restDuration]);
   
+  useEffect(() => {
+    if (!showLockScreen) return;
+    setRestEndAt(new Date(Date.now() + restDuration * 60 * 1000));
+  }, [restDuration, showLockScreen]);
+
+  const restAt = () => {
+    return new Date(Date.now() + restMinutes * 60 * 1000)
+  };
+
   const handleEndRest = useCallback(() => {
     invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
     invoke("hide_lock_windows").catch((error) =>
@@ -113,7 +125,7 @@ function App() {
     setShowLockScreen(false);
     setRestEndAt(null);
     if (restEnabled) {
-      setNextRestAt(new Date(Date.now() + restMinutes * 60 * 1000));
+      setNextRestAt(restAt());
     } else {
       setNextRestAt(null);
     }
@@ -124,7 +136,7 @@ function App() {
     setShowLockScreen(false);
     setRestEndAt(null);
     if (restEnabled) {
-      setNextRestAt(new Date(Date.now() + restMinutes * 60 * 1000));
+      setNextRestAt(restAt());
     } else {
       setNextRestAt(null);
     }
@@ -185,6 +197,7 @@ function App() {
   useEffect(() => {
     if (isLockWindow) return;
     if (showLockScreen) {
+      console.log('showLockScreen', restDuration, restEndAt)
       const endAt = restEndAt ?? new Date(Date.now() + restDuration * 60 * 1000);
       invoke("show_lock_windows", {
         endAtMs: endAt.getTime(),
@@ -207,9 +220,6 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const end = Number(params.get("end") || 0);
     setLockEndAtMs(end > 0 ? end : null);
-    setLockPayload((prev) => ({
-      ...prev,
-    }));
   }, [isLockWindow]);
   
   useEffect(() => {
@@ -226,7 +236,7 @@ function App() {
         weekday: "short",
       });
 
-      let countdown = "00:00:00";
+      let countdown = "00:00";
       if (lockEndAtMs) {
         countdown = formatDuration2((lockEndAtMs - nowValue.getTime()) / 1000);
       }
@@ -247,8 +257,7 @@ function App() {
       setNextRestAt(null);
       return;
     }
-    const next = new Date(Date.now() + restMinutes * 60 * 1000);
-    setNextRestAt(next);
+    setNextRestAt(restAt());
   }, [showLockScreen, restEnabled, restMinutes]);
 
   useEffect(() => {
@@ -269,15 +278,10 @@ function App() {
   }, [handleExitRest, now, restEndAt, showLockScreen]);
 
   useEffect(() => {
-    if (!showLockScreen) return;
-    setRestEndAt(new Date(Date.now() + restDuration * 60 * 1000));
-  }, [restDuration, showLockScreen]);
-
-  useEffect(() => {
     if (showLockScreen) return;
     if (!restEnabled || !nextRestAt) return;
     if (now.getTime() < nextRestAt.getTime()) return;
-    setNextRestAt(new Date(Date.now() + restMinutes * 60 * 1000));
+    setNextRestAt(restAt());
   }, [now, showLockScreen, restEnabled, nextRestAt, restMinutes]);
 
   const nextRestCountdown = restEnabled && nextRestAt
