@@ -20,6 +20,13 @@ function formatDuration(totalSeconds: number) {
   return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
 }
 
+function formatDuration2(totalSeconds: number) {
+  const clamped = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor((clamped % 3600) / 60);
+  const seconds = clamped % 60;
+  return `${pad2(minutes)}:${pad2(seconds)}`;
+}
+
 function formatUsage(totalSeconds: number) {
   const clamped = Math.max(0, Math.floor(totalSeconds));
   const days = Math.floor(clamped / 86400);
@@ -52,7 +59,7 @@ function App() {
   const [lockPayload, setLockPayload] = useState({
     timeText: "--:--",
     dateText: "",
-    restCountdown: "00:00:00",
+    restCountdown: "00:00",
   });
   const [lockEndAtMs, setLockEndAtMs] = useState<number | null>(null);
 
@@ -112,6 +119,12 @@ function App() {
       console.error("锁屏窗口关闭失败", error),
     );
     setShowLockScreen(false);
+    setRestEndAt(null);
+    if (restEnabled) {
+      setNextRestAt(new Date(Date.now() + restMinutes * 60 * 1000));
+    } else {
+      setNextRestAt(null);
+    }
   }, [restDuration]);
 
   const handleExitRest = useCallback(() => {
@@ -223,7 +236,7 @@ function App() {
 
       let countdown = "00:00:00";
       if (lockEndAtMs) {
-        countdown = formatDuration((lockEndAtMs - nowValue.getTime()) / 1000);
+        countdown = formatDuration2((lockEndAtMs - nowValue.getTime()) / 1000);
       }
 
       setLockPayload((prev) => ({
@@ -267,17 +280,6 @@ function App() {
     if (!showLockScreen) return;
     setRestEndAt(new Date(Date.now() + restDuration * 60 * 1000));
   }, [restDuration, showLockScreen]);
-
-  useEffect(() => {
-    if (!showLockScreen) return;
-    function onKeydown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        handleExitRest();
-      }
-    }
-    window.addEventListener("keydown", onKeydown);
-    return () => window.removeEventListener("keydown", onKeydown);
-  }, [showLockScreen, handleExitRest]);
 
   useEffect(() => {
     if (showLockScreen) return;
