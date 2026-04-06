@@ -453,8 +453,8 @@ function App() {
                     <input
                       className="pill__input"
                       type="number"
-                      min={2}
-                      max={20}
+                      min={1}
+                      max={30}
                       value={restDuration}
                       onChange={(event) =>
                         setRestDuration(Number(event.target.value))
