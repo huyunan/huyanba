@@ -51,7 +51,7 @@ function App() {
   const [colorTemp, setColorTemp] = useState(4700);
   const [restEnabled, setRestEnabled] = useState(true);
   const [restMinutes, setRestMinutes] = useState(30);
-  const [restDuration, setRestDuration] = useState(1);
+  const [restDuration, setRestDuration] = useState(2);
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
   const [nextRestAt, setNextRestAt] = useState<Date | null>(null);
@@ -453,7 +453,7 @@ function App() {
                     <input
                       className="pill__input"
                       type="number"
-                      min={3}
+                      min={2}
                       max={20}
                       value={restDuration}
                       onChange={(event) =>
