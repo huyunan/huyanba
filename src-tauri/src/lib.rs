@@ -22,7 +22,6 @@ use windows::Win32::UI::ColorSystem::SetDeviceGammaRamp;
 #[derive(Default)]
 struct LockState {
     labels: Mutex<Vec<String>>,
-    last_update: Mutex<Option<LockUpdate>>,
 }
 #[derive(Default)]
 struct AppState {
@@ -154,11 +153,6 @@ struct LockUpdate {
     date_text: String,
     rest_countdown: String,
     allow_esc_exit: bool,
-}
-
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
 fn clamp(value: f64, min: f64, max: f64) -> f64 {
@@ -328,15 +322,6 @@ fn hide_lock_windows(
     Ok(())
 }
 
-#[tauri::command]
-fn get_lock_update(state: tauri::State<'_, LockState>) -> Option<LockUpdate> {
-    state
-        .last_update
-        .lock()
-        .ok()
-        .and_then(|value| value.clone())
-}
-
 fn now_ts() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -438,23 +423,6 @@ fn apply_default_window_icon<R: tauri::Runtime>(
     if let Some(icon) = app.default_window_icon().cloned() {
         let _ = window.set_icon(icon);
     }
-}
-
-#[tauri::command]
-fn get_wallpaper_storage_settings(app: AppHandle) -> Result<WallpaperStorageSettings, String> {
-    let settings = get_wallpaper_storage_settings_inner(&app)?;
-    let current_dir = PathBuf::from(&settings.current_dir);
-    fs::create_dir_all(&current_dir).map_err(|err| err.to_string())?;
-    allow_wallpaper_dir_on_scope(&app, &current_dir)?;
-    Ok(settings)
-}
-
-#[tauri::command]
-fn request_quit(app: AppHandle, state: tauri::State<'_, AppState>) -> Result<(), String> {
-    state.allow_exit.store(true, Ordering::SeqCst);
-    let _ = apply_gamma(1.0, 1.0, 1.0);
-    let _ = app.exit(0);
-    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -564,14 +532,10 @@ pub fn run() {
         .manage(LockState::default())
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
-            greet,
             set_gamma,
             reset_gamma,
             show_lock_windows,
             hide_lock_windows,
-            get_lock_update,
-            get_wallpaper_storage_settings,
-            request_quit,
             log_app
         ])
         .run(tauri::generate_context!())
