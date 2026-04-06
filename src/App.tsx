@@ -35,8 +35,6 @@ function formatUsage(totalSeconds: number) {
   return `${minutes} 分钟`;
 }
 
-type AppView = "dashboard" | "wallpapers";
-
 function App() {
   const isLockWindow =
     new URLSearchParams(window.location.search).get("lockscreen") === "1";
@@ -48,25 +46,16 @@ function App() {
   const [restEnabled, setRestEnabled] = useState(true);
   const [restMinutes, setRestMinutes] = useState(30);
   const [restDuration, setRestDuration] = useState(1);
-  const [allowEscExit, setAllowEscExit] = useState(true);
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
   const [nextRestAt, setNextRestAt] = useState<Date | null>(null);
   const [restEndAt, setRestEndAt] = useState<Date | null>(null);
-  const [restPaused, setRestPaused] = useState(false);
-  const [restPausedRemaining, setRestPausedRemaining] = useState<number | null>(
-    null,
-  );
   const [lockPayload, setLockPayload] = useState({
     timeText: "--:--",
     dateText: "",
     restCountdown: "00:00:00",
-    restPaused: false,
-    allowEscExit: true,
   });
   const [lockEndAtMs, setLockEndAtMs] = useState<number | null>(null);
-  const [lockPausedLocal, setLockPausedLocal] = useState(false);
-  const [lockRemainingLocal, setLockRemainingLocal] = useState(0);
   const exitInProgressRef = useRef(false);
   const exitRestRef = useRef<() => void>(() => {});
   const togglePauseRef = useRef<() => void>(() => {});
@@ -118,8 +107,6 @@ function App() {
   const handleStartRest = useCallback(() => {
     exitInProgressRef.current = false;
     const endAt = new Date(Date.now() + restDuration * 60 * 1000);
-    setRestPaused(false);
-    setRestPausedRemaining(null);
     setRestEndAt(endAt);
     setShowLockScreen(true);
   }, [restDuration]);
@@ -129,8 +116,6 @@ function App() {
     exitInProgressRef.current = true;
     invoke("log_app", { message: "前端退出休息: start" }).catch(() => undefined);
     setShowLockScreen(false);
-    setRestPaused(false);
-    setRestPausedRemaining(null);
     setRestEndAt(null);
     if (restEnabled) {
       setNextRestAt(new Date(Date.now() + restMinutes * 60 * 1000));
@@ -153,33 +138,10 @@ function App() {
     filterStrength,
     colorTemp,
   ]);
-
-  const handleTogglePause = useCallback(() => {
-    if (!showLockScreen) return;
-    if (restPaused) {
-      if (restPausedRemaining === null) return;
-      setRestEndAt(new Date(Date.now() + restPausedRemaining * 1000));
-      setRestPaused(false);
-      setRestPausedRemaining(null);
-      return;
-    }
-    if (!restEndAt) return;
-    const remaining = Math.max(
-      0,
-      Math.floor((restEndAt.getTime() - Date.now()) / 1000),
-    );
-    setRestPausedRemaining(remaining);
-    setRestEndAt(null);
-    setRestPaused(true);
-  }, [restEndAt, restPaused, restPausedRemaining, showLockScreen]);
-
+  
   useEffect(() => {
     exitRestRef.current = handleExitRest;
   }, [handleExitRest]);
-
-  useEffect(() => {
-    togglePauseRef.current = handleTogglePause;
-  }, [handleTogglePause]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -230,9 +192,6 @@ function App() {
       const endAt = restEndAt ?? new Date(Date.now() + restDuration * 60 * 1000);
       invoke("show_lock_windows", {
         endAtMs: endAt.getTime(),
-        paused: restPaused,
-        pausedRemaining: restPausedRemaining || 0,
-        allowEsc: allowEscExit,
       }).catch((error) => console.error("锁屏窗口创建失败", error));
     } else {
       invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
@@ -245,9 +204,6 @@ function App() {
     showLockScreen,
     restEndAt,
     restDuration,
-    restPaused,
-    restPausedRemaining,
-    allowEscExit,
   ]);
 
   useEffect(() => {
@@ -278,15 +234,9 @@ function App() {
     if (!isLockWindow) return;
     const params = new URLSearchParams(window.location.search);
     const end = Number(params.get("end") || 0);
-    const paused = params.get("paused") === "1";
-    const remaining = Number(params.get("remaining") || 0);
-    const allowEsc = params.get("allowEsc") !== "0";
     setLockEndAtMs(end > 0 ? end : null);
-    setLockPausedLocal(paused);
-    setLockRemainingLocal(remaining);
     setLockPayload((prev) => ({
       ...prev,
-      allowEscExit: allowEsc,
     }));
   }, [isLockWindow]);
   useEffect(() => {
@@ -304,9 +254,7 @@ function App() {
       });
 
       let countdown = "00:00:00";
-      if (lockPausedLocal) {
-        countdown = formatDuration(lockRemainingLocal);
-      } else if (lockEndAtMs) {
+      if (lockEndAtMs) {
         countdown = formatDuration((lockEndAtMs - nowValue.getTime()) / 1000);
       }
 
@@ -315,16 +263,14 @@ function App() {
         timeText: timeValue,
         dateText: dateValue,
         restCountdown: countdown,
-        restPaused: lockPausedLocal,
       }));
     }, 500);
     return () => clearInterval(timer);
-  }, [isLockWindow, lockEndAtMs, lockPausedLocal, lockRemainingLocal]);
+  }, [isLockWindow, lockEndAtMs]);
 
   useEffect(() => {
     if (!isLockWindow) return;
     function onKeydown(event: KeyboardEvent) {
-      if (!lockPayload.allowEscExit) return;
       if (event.key === "Escape") {
         invoke("lockscreen_action", { action: "exit" }).catch((error) =>
           console.error("锁屏退出失败", error),
@@ -333,9 +279,7 @@ function App() {
     }
     window.addEventListener("keydown", onKeydown);
     return () => window.removeEventListener("keydown", onKeydown);
-  }, [isLockWindow, lockPayload.allowEscExit]);
-
-  // 全局快捷键已取消
+  }, [isLockWindow]);
 
   useEffect(() => {
     if (showLockScreen) return;
@@ -352,8 +296,6 @@ function App() {
     if (!nextRestAt) return;
     if (now.getTime() >= nextRestAt.getTime()) {
       const endAt = new Date(Date.now() + restDuration * 60 * 1000);
-      setRestPaused(false);
-      setRestPausedRemaining(null);
       setRestEndAt(endAt);
       setShowLockScreen(true);
     }
@@ -361,32 +303,26 @@ function App() {
 
   useEffect(() => {
     if (!showLockScreen || !restEndAt) return;
-    if (restPaused) return;
     if (now.getTime() >= restEndAt.getTime()) {
       handleExitRest();
     }
-  }, [handleExitRest, now, restPaused, restEndAt, showLockScreen]);
+  }, [handleExitRest, now, restEndAt, showLockScreen]);
 
   useEffect(() => {
     if (!showLockScreen) return;
-    if (restPaused) {
-      setRestPausedRemaining(restDuration * 60);
-      return;
-    }
     setRestEndAt(new Date(Date.now() + restDuration * 60 * 1000));
-  }, [restDuration, showLockScreen, restPaused]);
+  }, [restDuration, showLockScreen]);
 
   useEffect(() => {
     if (!showLockScreen) return;
     function onKeydown(event: KeyboardEvent) {
-      if (!allowEscExit) return;
       if (event.key === "Escape") {
         handleExitRest();
       }
     }
     window.addEventListener("keydown", onKeydown);
     return () => window.removeEventListener("keydown", onKeydown);
-  }, [showLockScreen, allowEscExit, handleExitRest]);
+  }, [showLockScreen, handleExitRest]);
 
   useEffect(() => {
     if (showLockScreen) return;
@@ -398,14 +334,6 @@ function App() {
   const nextRestCountdown = restEnabled && nextRestAt
     ? formatDuration((nextRestAt.getTime() - now.getTime()) / 1000)
     : "已暂停";
-
-  const restCountdownSeconds =
-    showLockScreen && restPaused && restPausedRemaining !== null
-      ? restPausedRemaining
-      : showLockScreen && restEndAt
-        ? (restEndAt.getTime() - now.getTime()) / 1000
-        : restDuration * 60;
-  const restCountdown = formatDuration(restCountdownSeconds);
 
   const timeText = now.toLocaleTimeString("zh-CN", {
     hour: "2-digit",
@@ -602,7 +530,7 @@ function App() {
                 </div>
 
                 <div className="settings">
-                  <label className="setting-row">
+                  {/* <label className="setting-row">
                     <span>锁屏允许 ESC 退出</span>
                     <label className="toggle">
                       <input
@@ -612,7 +540,7 @@ function App() {
                       />
                       <span className="toggle__track" />
                     </label>
-                  </label>
+                  </label> */}
 
                   <label className="setting-row">
                     <span>开机自启</span>
@@ -628,7 +556,7 @@ function App() {
         </>
       )}
       
-      {isLockWindow && (
+      {!isLockWindow && (
         <div
           className="lockscreen"
         >
@@ -644,30 +572,17 @@ function App() {
             <div className="lockscreen__center">
               <p>休息一下，放松眼睛</p>
               <div className="lockscreen__timer">
-                <p className="lockscreen__timer-label">剩余时间</p>
-                <div
-                  className={`lockscreen__timer-value ${
-                    lockPayload.restPaused ? "is-paused" : ""
-                  }`}
-                >
+                <div className="lockscreen__timer-value">
                   {lockPayload.restCountdown.replaceAll(":", " : ")}
                 </div>
-                <p className="lockscreen__timer-hint">
-                  {lockPayload.restPaused
-                    ? "计时已暂停，点击继续恢复倒计时"
-                    : "闭眼 20 秒，眺望远处 20 秒"}
-                </p>
               </div>
-              <p className="lockscreen__quote">
-                “短暂离开屏幕，给眼睛一次深呼吸。”
-              </p>
-            </div>
-            <div className="lockscreen__actions">
-              {lockPayload.allowEscExit ? (
-                <span className="helper-text">ESC 退出已开启</span>
-              ) : (
-                <span className="helper-text">ESC 已禁用</span>
-              )}
+              <button
+                className="view-tab"
+                type="button"
+                onClick={handleExitRest}
+              >
+                跳过休息
+              </button>
             </div>
           </div>
         </div>

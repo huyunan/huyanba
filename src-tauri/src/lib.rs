@@ -153,7 +153,6 @@ struct LockUpdate {
     time_text: String,
     date_text: String,
     rest_countdown: String,
-    rest_paused: bool,
     allow_esc_exit: bool,
 }
 
@@ -250,9 +249,6 @@ async fn show_lock_windows(
     app: tauri::AppHandle,
     state: tauri::State<'_, LockState>,
     end_at_ms: i64,
-    paused: bool,
-    paused_remaining: i64,
-    allow_esc: bool,
 ) -> Result<(), String> {
     let start = Instant::now();
     let mut labels = state.labels.lock().map_err(|_| "锁状态被占用")?;
@@ -280,11 +276,8 @@ async fn show_lock_windows(
         let y = (position.y as f64 / scale).floor() - 200.0;
 
         let url = format!(
-            "index.html?lockscreen=1&end={}&paused={}&remaining={}&allowEsc={}",
+            "index.html?lockscreen=1&end={}",
             end_at_ms,
-            if paused { 1 } else { 0 },
-            paused_remaining,
-            if allow_esc { 1 } else { 0 }
         );
         let window = WebviewWindowBuilder::new(&app, label.clone(), WebviewUrl::App(url.into()))
             .decorations(false)
