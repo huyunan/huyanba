@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
@@ -56,8 +55,6 @@ function App() {
     restCountdown: "00:00:00",
   });
   const [lockEndAtMs, setLockEndAtMs] = useState<number | null>(null);
-  const exitRestRef = useRef<() => void>(() => {});
-  const togglePauseRef = useRef<() => void>(() => {});
 
   const presets = useMemo(
     () => ({
@@ -107,6 +104,14 @@ function App() {
     const endAt = new Date(Date.now() + restDuration * 60 * 1000);
     setRestEndAt(endAt);
     setShowLockScreen(true);
+  }, [restDuration]);
+  
+  const handleEndRest = useCallback(() => {
+    invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
+    invoke("hide_lock_windows").catch((error) =>
+      console.error("锁屏窗口关闭失败", error),
+    );
+    setShowLockScreen(false);
   }, [restDuration]);
 
   const handleExitRest = useCallback(() => {
@@ -193,30 +198,6 @@ function App() {
   ]);
 
   useEffect(() => {
-    if (isLockWindow) return;
-    let unlisten: (() => void) | undefined;
-    const window = getCurrentWebviewWindow();
-    window
-      .listen<string>("lockscreen-action", (event) => {
-        if (event.payload === "exit") {
-          exitRestRef.current();
-        } else if (event.payload === "toggle_pause") {
-          togglePauseRef.current();
-        }
-      })
-      .then((fn) => {
-        unlisten = fn;
-      })
-      .catch((error) => console.error("监听锁屏动作失败", error));
-
-    return () => {
-      if (unlisten) {
-        unlisten();
-      }
-    };
-  }, [isLockWindow]);
-
-  useEffect(() => {
     if (!isLockWindow) return;
     const params = new URLSearchParams(window.location.search);
     const end = Number(params.get("end") || 0);
@@ -254,19 +235,6 @@ function App() {
     }, 500);
     return () => clearInterval(timer);
   }, [isLockWindow, lockEndAtMs]);
-
-  useEffect(() => {
-    if (!isLockWindow) return;
-    function onKeydown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        invoke("lockscreen_action", { action: "exit" }).catch((error) =>
-          console.error("锁屏退出失败", error),
-        );
-      }
-    }
-    window.addEventListener("keydown", onKeydown);
-    return () => window.removeEventListener("keydown", onKeydown);
-  }, [isLockWindow]);
 
   useEffect(() => {
     if (showLockScreen) return;
@@ -565,7 +533,7 @@ function App() {
               <button
                 className="view-tab"
                 type="button"
-                onClick={handleExitRest}
+                onClick={handleEndRest}
               >
                 跳过休息
               </button>
