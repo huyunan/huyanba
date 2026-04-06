@@ -102,20 +102,24 @@ function App() {
     setColorTemp(next.temp);
   }, [activePreset, resolvePreset]);
 
+  const restDuraAt = () => {
+    return new Date(Date.now() + restDuration * 60 * 1000);
+  };
+  
+  const restMsAt = () => {
+    return new Date(Date.now() + restMinutes * 60 * 1000);
+  };
+  
   const handleStartRest = useCallback(() => {
-    const endAt = new Date(Date.now() + restDuration * 60 * 1000);
+    const endAt = restDuraAt();
     setRestEndAt(endAt);
     setShowLockScreen(true);
   }, [restDuration]);
   
   useEffect(() => {
     if (!showLockScreen) return;
-    setRestEndAt(new Date(Date.now() + restDuration * 60 * 1000));
+    setRestEndAt(restDuraAt());
   }, [restDuration, showLockScreen]);
-
-  const restAt = () => {
-    return new Date(Date.now() + restMinutes * 60 * 1000)
-  };
 
   const handleEndRest = useCallback(() => {
     invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
@@ -125,7 +129,7 @@ function App() {
     setShowLockScreen(false);
     setRestEndAt(null);
     if (restEnabled) {
-      setNextRestAt(restAt());
+      setNextRestAt(restMsAt());
     } else {
       setNextRestAt(null);
     }
@@ -136,7 +140,7 @@ function App() {
     setShowLockScreen(false);
     setRestEndAt(null);
     if (restEnabled) {
-      setNextRestAt(restAt());
+      setNextRestAt(restMsAt());
     } else {
       setNextRestAt(null);
     }
@@ -198,7 +202,7 @@ function App() {
     if (isLockWindow) return;
     if (showLockScreen) {
       console.log('showLockScreen', restDuration, restEndAt)
-      const endAt = restEndAt ?? new Date(Date.now() + restDuration * 60 * 1000);
+      const endAt = restEndAt ?? restDuraAt();
       invoke("show_lock_windows", {
         endAtMs: endAt.getTime(),
       }).catch((error) => console.error("锁屏窗口创建失败", error));
@@ -257,14 +261,14 @@ function App() {
       setNextRestAt(null);
       return;
     }
-    setNextRestAt(restAt());
+    setNextRestAt(restMsAt());
   }, [showLockScreen, restEnabled, restMinutes]);
 
   useEffect(() => {
     if (!restEnabled || showLockScreen) return;
     if (!nextRestAt) return;
     if (now.getTime() >= nextRestAt.getTime()) {
-      const endAt = new Date(Date.now() + restDuration * 60 * 1000);
+      const endAt = restDuraAt();
       setRestEndAt(endAt);
       setShowLockScreen(true);
     }
@@ -281,7 +285,7 @@ function App() {
     if (showLockScreen) return;
     if (!restEnabled || !nextRestAt) return;
     if (now.getTime() < nextRestAt.getTime()) return;
-    setNextRestAt(restAt());
+    setNextRestAt(restMsAt());
   }, [now, showLockScreen, restEnabled, nextRestAt, restMinutes]);
 
   const nextRestCountdown = restEnabled && nextRestAt
