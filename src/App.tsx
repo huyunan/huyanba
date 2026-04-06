@@ -27,25 +27,10 @@ function formatDuration2(totalSeconds: number) {
   return `${pad2(minutes)}:${pad2(seconds)}`;
 }
 
-function formatUsage(totalSeconds: number) {
-  const clamped = Math.max(0, Math.floor(totalSeconds));
-  const days = Math.floor(clamped / 86400);
-  const hours = Math.floor((clamped % 86400) / 3600);
-  const minutes = Math.floor((clamped % 3600) / 60);
-  if (days > 0) {
-    return `${days} 天 ${hours} 小时`;
-  }
-  if (hours > 0) {
-    return `${hours} 小时 ${minutes} 分钟`;
-  }
-  return `${minutes} 分钟`;
-}
-
 function App() {
   const isLockWindow =
     new URLSearchParams(window.location.search).get("lockscreen") === "1";
   const [now, setNow] = useState(new Date());
-  const [sessionStart] = useState(() => Date.now());
   const [filterEnabled, setFilterEnabled] = useState(true);
   const [filterStrength, setFilterStrength] = useState(30);
   const [colorTemp, setColorTemp] = useState(4700);
@@ -301,7 +286,6 @@ function App() {
     day: "numeric",
     weekday: "short",
   });
-  const usageText = formatUsage((now.getTime() - sessionStart) / 1000);
 
   return (
     <div className="app">
@@ -335,7 +319,7 @@ function App() {
                 <div className="hero__stats">
                   <div>
                     <p className="stat__label">今日休息次数</p>
-                    <p className="stat__value">{usageText}</p>
+                    <p className="stat__value">4 次</p>
                   </div>
                   <div>
                     <p className="stat__label">下一次休息</p>
