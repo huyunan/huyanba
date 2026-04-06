@@ -42,7 +42,7 @@ function App() {
   // 休息间隔
   const [restMinutes, setRestMinutes] = useState(50);
   // 休息时间
-  const [restDuration, setRestDuration] = useState(3);
+  const [restDuration, setRestDuration] = useState(1);
   // 显示锁屏弹框
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
@@ -121,23 +121,11 @@ function App() {
     setRestEndAt(restDuraAt());
   }, [restDuration, showLockScreen]);
 
-  const handleEndRest = useCallback(() => {
-    invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
-    invoke("hide_lock_windows").catch((error) =>
-      console.error("锁屏窗口关闭失败", error),
-    );
-    setShowLockScreen(false);
-    setRestEndAt(null);
-    if (restEnabled) {
-      setNextRestAt(restMsAt());
-    } else {
-      setNextRestAt(null);
-    }
-  }, [restDuration]);
-
   const handleExitRest = useCallback(() => {
     invoke("log_app", { message: "前端退出休息: start" }).catch(() => undefined);
+    console.log('hyn handleExitRest 1', isLockWindow, showLockScreen)
     setShowLockScreen(false);
+    console.log('hyn handleExitRest 2', isLockWindow, showLockScreen)
     setRestEndAt(null);
     if (restEnabled) {
       setNextRestAt(restMsAt());
@@ -199,14 +187,17 @@ function App() {
   }, [isLockWindow, filterEnabled, filterStrength, colorTemp]);
 
   useEffect(() => {
+    console.log('hyn isLockWindow 1', isLockWindow, showLockScreen)
     if (isLockWindow) return;
+    console.log('hyn isLockWindow 2', isLockWindow, showLockScreen)
     if (showLockScreen) {
-      console.log('showLockScreen', restDuration, restEndAt)
+      console.log('showLockScreen 1', restDuration, restEndAt)
       const endAt = restEndAt ?? restDuraAt();
       invoke("show_lock_windows", {
         endAtMs: endAt.getTime(),
       }).catch((error) => console.error("锁屏窗口创建失败", error));
     } else {
+      console.log('showLockScreen 2', restDuration, restEndAt)
       invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
       invoke("hide_lock_windows").catch((error) =>
         console.error("锁屏窗口关闭失败", error),
@@ -254,7 +245,7 @@ function App() {
     }, 500);
     return () => clearInterval(timer);
   }, [isLockWindow, lockEndAtMs]);
-
+  
   useEffect(() => {
     if (showLockScreen) return;
     if (!restEnabled) {
@@ -268,6 +259,7 @@ function App() {
     if (!restEnabled || showLockScreen) return;
     if (!nextRestAt) return;
     if (now.getTime() >= nextRestAt.getTime()) {
+    console.log('hyn useEffect1 3', showLockScreen)
       const endAt = restDuraAt();
       setRestEndAt(endAt);
       setShowLockScreen(true);
@@ -276,7 +268,9 @@ function App() {
 
   useEffect(() => {
     if (!showLockScreen || !restEndAt) return;
+    console.log('hyn useEffect2 22', isLockWindow, showLockScreen)
     if (now.getTime() >= restEndAt.getTime()) {
+    console.log('hyn useEffect2 3', isLockWindow, showLockScreen)
       handleExitRest();
     }
   }, [handleExitRest, now, restEndAt, showLockScreen]);
@@ -534,7 +528,11 @@ function App() {
               <button
                 className="view-tab"
                 type="button"
-                onClick={handleEndRest}
+                onClick={() => {
+                  invoke("hide_lock_windows").catch((error) =>
+                    console.error("锁屏窗口关闭失败", error),
+                  )}
+                }
               >
                 跳过休息
               </button>
