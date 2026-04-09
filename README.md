@@ -53,50 +53,6 @@ aseet
 
 ---
 
-# Huyanba (English)
-
-Desktop eye-care app: blue-light filter + scheduled break lockscreen.
-
-## Features
-- Blue-light filter with strength + tone presets
-- Scheduled breaks (default 30 minutes work / 1 minute rest)
-- Fullscreen rest lockscreen (multi-monitor)
-- Tray controls (show/hide/rest/quit)
-
-## Screenshots
-- Dashboard overview (current eye-care state + next break)
-![Dashboard overview](docs/images/dashboard-overview.png)
-
-## Version
-- Current packaged version: `2.1.0`
-
-## Installer (local path)
-```
-D:\Ai\huyanba\huzamba\aseet
-```
-
-Packaged artifacts currently available:
-- `aseet\huyanba_2.1.0_x64-setup.exe`
-- `aseet\huyanba_2.1.0_x64_en-US.msi`
-
-## Download
-- [Download NSIS installer (.exe)](https://github.com/guoruya/huyanba/releases/download/v2.1.0/huyanba_2.1.0_x64-setup.exe)
-- [Download MSI installer (.msi)](https://github.com/guoruya/huyanba/releases/download/v2.1.0/huyanba_2.1.0_x64_en-US.msi)
-- [Open the v2.1.0 release page](https://github.com/guoruya/huyanba/releases/tag/v2.1.0)
-
-## Development
-```
-cd D:\Ai\huyanba\huzamba
-npm install
-npm run tauri dev
-```
-
-## Build (Windows)
-```
-cd D:\Ai\huyanba\huzamba
-npm run tauri build
-```
-
 After the build, the packaged outputs are also copied to:
 ```
 aseet
