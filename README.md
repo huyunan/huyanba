@@ -12,15 +12,6 @@
 - 首页总览（当前护眼状态 + 下一次休息）
 ![首页总览](docs/images/dashboard-overview.png)
 
-- 壁纸控制台 / Unsplash（在线搜索与下载）
-![壁纸控制台 Unsplash](docs/images/wallpaper-console-unsplash.png)
-
-- 壁纸控制台 / 故宫来源（来源切换与分页控制）
-![壁纸控制台 故宫概览](docs/images/wallpaper-console-palace-overview.png)
-
-- 壁纸控制台 / 故宫候选网格（本地候选预览）
-![壁纸控制台 故宫候选网格](docs/images/wallpaper-console-palace-grid.png)
-
 ## 版本
 - 当前打包版本：`2.1.0`
 
@@ -75,15 +66,6 @@ Desktop eye-care app: blue-light filter + scheduled break lockscreen.
 ## Screenshots
 - Dashboard overview (current eye-care state + next break)
 ![Dashboard overview](docs/images/dashboard-overview.png)
-
-- Wallpaper console / Unsplash (online search and download)
-![Wallpaper console Unsplash](docs/images/wallpaper-console-unsplash.png)
-
-- Wallpaper console / Palace source (source switching and paging)
-![Wallpaper console Palace overview](docs/images/wallpaper-console-palace-overview.png)
-
-- Wallpaper console / Palace candidate grid (local preview batch)
-![Wallpaper console Palace grid](docs/images/wallpaper-console-palace-grid.png)
 
 ## Version
 - Current packaged version: `2.1.0`
