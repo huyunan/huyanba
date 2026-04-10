@@ -348,20 +348,13 @@ function App() {
             </section>
 
             <section className="main-grid">
+            {filterEnabled && (
               <div className="card">
                 <div className="card__header">
                   <div>
                     <p className="card__eyebrow">护眼滤镜</p>
                     <h2>过滤蓝光</h2>
                   </div>
-                  <label className="toggle">
-                    <input
-                      type="checkbox"
-                      checked={filterEnabled}
-                      onChange={() => setFilterEnabled((prev) => !prev)}
-                    />
-                    <span className="toggle__track" />
-                  </label>
                 </div>
 
                 <div className="slider-group">
@@ -418,7 +411,7 @@ function App() {
                   />
                 </div>
               </div>
-
+            )}
               <div className="card">
                 <div className="card__header">
                   <div>
@@ -488,17 +481,17 @@ function App() {
                 </div>
 
                 <div className="settings">
-                  {/* <label className="setting-row">
-                    <span>锁屏允许 ESC 退出</span>
+                  <label className="setting-row">
+                    <span>开启护眼</span>
                     <label className="toggle">
                       <input
                         type="checkbox"
-                        checked={allowEscExit}
-                        onChange={() => setAllowEscExit((prev) => !prev)}
+                        checked={filterEnabled}
+                        onChange={() => setFilterEnabled((prev) => !prev)}
                       />
                       <span className="toggle__track" />
                     </label>
-                  </label> */}
+                  </label>
 
                   <label className="setting-row">
                     <span>开机自启</span>
