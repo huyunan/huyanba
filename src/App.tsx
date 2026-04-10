@@ -40,9 +40,9 @@ function App() {
   // 休息节奏开关
   const [restEnabled, setRestEnabled] = useState(true);
   // 休息间隔
-  const [restMinutes, setRestMinutes] = useState(50);
+  const [restMinutes, setRestMinutes] = useState(60);
   // 休息时间
-  const [restDuration, setRestDuration] = useState(1);
+  const [restDuration, setRestDuration] = useState(3);
   // 显示锁屏弹框
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
@@ -355,6 +355,14 @@ function App() {
                     <p className="card__eyebrow">护眼滤镜</p>
                     <h2>过滤蓝光</h2>
                   </div>
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={filterEnabled}
+                      onChange={() => setFilterEnabled((prev) => !prev)}
+                    />
+                    <span className="toggle__track" />
+                  </label>
                 </div>
 
                 <div className="slider-group">

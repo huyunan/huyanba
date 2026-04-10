@@ -699,6 +699,7 @@ input[type="range"] {
   font-size: 16px;
   font-weight: 600;
   color: #1c2b2b;
+  text-align: center;
 }
 
 .pill__input:focus {
