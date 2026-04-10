@@ -349,13 +349,13 @@ fn path_to_string(path: &Path) -> String {
     path.to_string_lossy().to_string()
 }
 
-fn wallpaper_default_dir(app: &AppHandle) -> Result<PathBuf, String> {
+fn default_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
-        .resolve("wallpapers", BaseDirectory::AppCache)
+        .resolve("log", BaseDirectory::AppCache)
         .map_err(|err| err.to_string())
 }
 
-fn wallpaper_storage_config_path(app: &AppHandle) -> Result<PathBuf, String> {
+fn storage_config_path(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app
         .path()
         .resolve("", BaseDirectory::AppConfig)
@@ -364,11 +364,11 @@ fn wallpaper_storage_config_path(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join("wallpaper-storage.json"))
 }
 
-fn wallpaper_storage_settings_from_config(
+fn storage_settings_from_config(
     app: &AppHandle,
     config: &WallpaperStorageConfig,
 ) -> Result<WallpaperStorageSettings, String> {
-    let default_dir = wallpaper_default_dir(app)?;
+    let default_dir = default_dir(app)?;
     let current_dir = if config.custom_dir.trim().is_empty() {
         default_dir.clone()
     } else {
@@ -384,9 +384,9 @@ fn wallpaper_storage_settings_from_config(
 fn get_storage_settings_inner(
     app: &AppHandle,
 ) -> Result<WallpaperStorageSettings, String> {
-    let config_path = wallpaper_storage_config_path(app)?;
+    let config_path = storage_config_path(app)?;
     let config = load_storage_config(&config_path);
-    wallpaper_storage_settings_from_config(app, &config)
+    storage_settings_from_config(app, &config)
 }
 
 fn allow_dir_on_scope(app: &AppHandle, dir: &Path) -> Result<(), String> {
@@ -440,8 +440,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            let wallpaper_dir = ensure_dir(app.handle())?;
-            allow_dir_on_scope(app.handle(), &wallpaper_dir)?;
+            let dir = ensure_dir(app.handle())?;
+            allow_dir_on_scope(app.handle(), &dir)?;
             if let Some(window) = app.get_webview_window("main") {
                 apply_default_window_icon(app.handle(), &window);
                 let _ = window.center();

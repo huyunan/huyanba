@@ -23,7 +23,7 @@
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["$APPCACHE/wallpapers/*"]
+        "scope": ["$APPCACHE/log/*"]
       }
     }
   },
