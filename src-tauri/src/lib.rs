@@ -35,11 +35,11 @@ fn default_source_kind() -> String {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-enum WallpaperRemoteSource {
+enum RestRemoteSource {
     Palace,
 }
 
-impl Default for WallpaperRemoteSource {
+impl Default for RestRemoteSource {
     fn default() -> Self {
         Self::Palace
     }
@@ -47,7 +47,7 @@ impl Default for WallpaperRemoteSource {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct WallpaperFile {
+struct RestFile {
     path: String,
     added_at: i64,
     source_url: String,
@@ -69,8 +69,8 @@ struct WallpaperFile {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-struct WallpaperState {
-    files: Vec<WallpaperFile>,
+struct RestState {
+    files: Vec<RestFile>,
     next_source_index: usize,
     next_show_index: usize,
     last_download_at: i64,
@@ -81,14 +81,14 @@ struct WallpaperState {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-struct WallpaperStorageConfig {
+struct RestStorageConfig {
     #[serde(default)]
     custom_dir: String,
 }
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
-struct WallpaperStorageSettings {
+struct RestStorageSettings {
     current_dir: String,
     default_dir: String,
     is_default: bool,
@@ -338,9 +338,9 @@ fn now_ts() -> i64 {
         .as_secs() as i64
 }
 
-fn load_storage_config(path: &Path) -> WallpaperStorageConfig {
+fn load_storage_config(path: &Path) -> RestStorageConfig {
     let Ok(data) = fs::read_to_string(path) else {
-        return WallpaperStorageConfig::default();
+        return RestStorageConfig::default();
     };
     serde_json::from_str(&data).unwrap_or_default()
 }
@@ -366,15 +366,15 @@ fn storage_config_path(app: &AppHandle) -> Result<PathBuf, String> {
 
 fn storage_settings_from_config(
     app: &AppHandle,
-    config: &WallpaperStorageConfig,
-) -> Result<WallpaperStorageSettings, String> {
+    config: &RestStorageConfig,
+) -> Result<RestStorageSettings, String> {
     let default_dir = default_dir(app)?;
     let current_dir = if config.custom_dir.trim().is_empty() {
         default_dir.clone()
     } else {
         PathBuf::from(config.custom_dir.trim())
     };
-    Ok(WallpaperStorageSettings {
+    Ok(RestStorageSettings {
         current_dir: path_to_string(&current_dir),
         default_dir: path_to_string(&default_dir),
         is_default: current_dir == default_dir,
@@ -383,7 +383,7 @@ fn storage_settings_from_config(
 
 fn get_storage_settings_inner(
     app: &AppHandle,
-) -> Result<WallpaperStorageSettings, String> {
+) -> Result<RestStorageSettings, String> {
     let config_path = storage_config_path(app)?;
     let config = load_storage_config(&config_path);
     storage_settings_from_config(app, &config)
