@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc, FixedOffset};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
@@ -8,7 +9,6 @@ use std::sync::{
     Mutex,
 };
 use std::time::Instant;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{
     menu::MenuBuilder,
     path::BaseDirectory,
@@ -331,11 +331,13 @@ fn lockscreen_action(app: tauri::AppHandle, action: String) -> Result<(), String
     Ok(())
 }
 
-fn now_ts() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or(Duration::from_secs(0))
-        .as_secs() as i64
+fn date_time() -> String {
+    let utc_time = Utc::now();
+    let china_timezone = FixedOffset::east_opt(8 * 3600).unwrap();
+    // 将 UTC 时间转换为中国标准时间
+    let china_time: DateTime<FixedOffset> = utc_time.with_timezone(&china_timezone);
+    // 格式化
+    return china_time.format("%Y-%m-%d %H:%M:%S").to_string();
 }
 
 fn load_storage_config(path: &Path) -> RestStorageConfig {
@@ -404,7 +406,7 @@ fn ensure_dir(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 fn append_line(path: &Path, message: &str) {
-    let ts = now_ts();
+    let ts = date_time();
     let line = format!("[{}] {}\n", ts, message);
     if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(path) {
         let _ = file.write_all(line.as_bytes());
