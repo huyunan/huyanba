@@ -18,6 +18,8 @@ use tauri::{
 use windows::Win32::Foundation::HWND;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC};
 use windows::Win32::UI::ColorSystem::SetDeviceGammaRamp;
+use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_autostart::ManagerExt;
 
 #[derive(Default)]
 struct LockState {
@@ -434,10 +436,20 @@ fn apply_default_window_icon<R: tauri::Runtime>(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_autostart::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            Some(vec!["--flag1", "--flag2"]),
+        ))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            // 获取自动启动管理器
+            let autostart_manager = app.autolaunch();
+            // 启用 autostart
+            let _ = autostart_manager.enable();
+            // 禁用 autostart
+            let _ = autostart_manager.disable();
+            
             let dir = ensure_dir(app.handle())?;
             allow_dir_on_scope(app.handle(), &dir)?;
             if let Some(window) = app.get_webview_window("main") {

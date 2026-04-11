@@ -5,7 +5,7 @@ import {
   useState,
 } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-// import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
+import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
@@ -351,14 +351,12 @@ function App() {
   }, []);
   
   const changeStartupEnabled = async (val: boolean) => {
-      // console.log(`isEnabled ${await isEnabled()}`);
       if (val) {
-        // 有bug todo
-        // await enable();
+        await enable();
         setStartupEnabled(true);
         localStorage.setItem("startupEnabled", "true");
       } else {
-        // disable();
+        disable();
         setStartupEnabled(false);
         localStorage.setItem("startupEnabled", "false");
       }
