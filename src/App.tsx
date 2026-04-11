@@ -326,23 +326,32 @@ function App() {
     } else {
       setStartupEnabled(false);
     }
+    localStorage.setItem("startupEnabled", String(startupEnabled));
+    
     const filterEnabled = localStorage.getItem("filterEnabled");
     if (filterEnabled === null || filterEnabled === "true") {
       setFilterEnabled(true);
+      localStorage.setItem("filterEnabled", "true");
     } else {
       setFilterEnabled(false);
+      localStorage.setItem("filterEnabled", "false");
     }
+    
     const restEnabled = localStorage.getItem("restEnabled");
     if (restEnabled === null || restEnabled === "true") {
       setRestEnabled(true);
+      localStorage.setItem("restEnabled", "true");
     } else {
       setRestEnabled(false);
+      localStorage.setItem("restEnabled", "false");
     }
+    
     const preset = localStorage.getItem("preset");
     if (preset !== null) {
       setActivePreset(String(preset));
     } else {
       setActivePreset("智能");
+      localStorage.setItem("restEnabled", "智能");
     }
     if (preset === "自设") {
       const filterStrength = localStorage.getItem("filterStrength");
@@ -350,44 +359,57 @@ function App() {
         setFilterStrength(Number(filterStrength));
       } else {
         setFilterStrength(30);
+        localStorage.setItem("filterStrength", "30");
       }
       const colorTemp = localStorage.getItem("colorTemp");
       if (colorTemp !== null) {
         setColorTemp(Number(colorTemp));
       } else {
         setColorTemp(4700);
+        localStorage.setItem("colorTemp", "4700");
       }
     }
-    setShowLockScreen(false);
+    
+    changeShowLockScreen(false);
+    
     const autoKeyEnabled = localStorage.getItem("autoKeyEnabled");
     if (autoKeyEnabled === null || autoKeyEnabled === "true") {
       setAutoKeyEnabled(true);
+      localStorage.setItem("autoKeyEnabled", "true");
     } else {
       setAutoKeyEnabled(false);
+      localStorage.setItem("autoKeyEnabled", "false");
     }
+    
     const restMinutes = localStorage.getItem("restMinutes");
     if (restMinutes !== null) {
       setRestMinutes(Number(restMinutes));
     } else {
       setRestMinutes(60);
+      localStorage.setItem("restMinutes", "60");
     }
+    
     const restDuration = localStorage.getItem("restDuration");
     if (restDuration !== null) {
       setRestDuration(Number(restDuration));
     } else {
       setRestDuration(3);
+      localStorage.setItem("restDuration", "3");
     }
+    
     const restTimes = localStorage.getItem("restTimes");
+      const date = new Date().getDate();
     if (restTimes !== null) {
       const obj = JSON.parse((restTimes as string));
-      const date = new Date().getDate();
       if (obj.date === date) {
          setRestTimes(Number(obj.times));
       } else {
         setRestTimes(0);
+        localStorage.setItem("restTimes", JSON.stringify({date, times: 0}));
       }
     } else {
       setRestTimes(0);
+      localStorage.setItem("restTimes", JSON.stringify({date, times: 0}));
     }
   }, []);
   
