@@ -292,8 +292,8 @@ function App() {
     } else {
       setStartupEnabled(false);
     }
-    const filterEnabled = localStorage.getItem("filterEnabled") === "true";
-    if (filterEnabled) {
+    const filterEnabled = localStorage.getItem("filterEnabled");
+    if (filterEnabled === null || filterEnabled === "true") {
       setFilterEnabled(true);
     } else {
       setFilterEnabled(false);
@@ -318,8 +318,8 @@ function App() {
         setColorTemp(4700);
       }
     }
-    const restEnabled = localStorage.getItem("restEnabled") === "true";
-    if (restEnabled) {
+    const restEnabled = localStorage.getItem("restEnabled");
+    if (restEnabled === null || restEnabled === "true") {
       setRestEnabled(true);
     } else {
       setRestEnabled(false);
@@ -350,7 +350,7 @@ function App() {
     }
   }, []);
   
-  const switchStartupEnabled = async (val: boolean) => {
+  const changeStartupEnabled = async (val: boolean) => {
       // console.log(`isEnabled ${await isEnabled()}`);
       if (val) {
         // 有bug todo
@@ -364,24 +364,24 @@ function App() {
       }
   }
   
-  const switchFilterEnabled = (val: boolean) => {
+  const changeFilterEnabled = (val: boolean) => {
       setFilterEnabled(val);
       localStorage.setItem("filterEnabled", String(val));
   }
   
-  const switchFilterStrength = (val: number) => {
+  const changeFilterStrength = (val: number) => {
       setFilterStrength(val);
       if (activePreset !== "自设") return;
       localStorage.setItem("filterStrength", String(val));
   }
   
-  const switchColorTemp = (val: number) => {
+  const changeColorTemp = (val: number) => {
       setColorTemp(val);
       if (activePreset !== "自设") return;
       localStorage.setItem("colorTemp", String(val));
   }
   
-  const switchPreset = (preset: "智能" | "自设" | "办公" | "影视" | "游戏") => {
+  const changePreset = (preset: "智能" | "自设" | "办公" | "影视" | "游戏") => {
       setActivePreset(preset);
       localStorage.setItem("preset", String(preset));
       const next = resolvePreset(preset);
@@ -394,19 +394,37 @@ function App() {
       localStorage.setItem("colorTemp", String(next.temp));
   }
   
-  const switchRestEnabled = (val: boolean) => {
+  const changeRestEnabled = (val: boolean) => {
       setRestEnabled(val);
       localStorage.setItem("restEnabled", String(val));
   }
   
-  const switchRestMinutes = (val: number) => {
+  const changeRestMinutes = (val: number) => {
       setRestMinutes(val);
       localStorage.setItem("restMinutes", String(val));
   }
   
-  const switchRestDuration = (val: number) => {
+  const blurRestMinutes = (val: number) => {
+      if (val < 30) {
+        val = 30;
+      } else if (val > 180) {
+        val = 180;
+      }
+      changeRestMinutes(val);
+  }
+  
+  const changeRestDuration = (val: number) => {
       setRestDuration(val);
       localStorage.setItem("restDuration", String(val));
+  }
+  
+  const blurRestDuration = (val: number) => {
+      if (val < 1) {
+        val = 1;
+      } else if (val > 30) {
+        val = 30;
+      }
+      changeRestDuration(val);
   }
   
   useEffect(() => {
@@ -471,7 +489,7 @@ function App() {
             <section className="hero">
               <div className="hero__text">
                 <p className="hero__kicker">今日护眼状态</p>
-                <h1>保持专注，但别忘了松一口气。</h1>
+                <h1>保持专注，但别忘了休息一下眼睛。</h1>
                 <div className="hero__stats">
                   <div>
                     <p className="stat__label">今日休息次数</p>
@@ -497,7 +515,7 @@ function App() {
                     <input
                       type="checkbox"
                       checked={filterEnabled}
-                      onChange={() => switchFilterEnabled(!filterEnabled)}
+                      onChange={() => changeFilterEnabled(!filterEnabled)}
                     />
                     <span className="toggle__track" />
                   </label>
@@ -514,7 +532,7 @@ function App() {
                     max={100}
                     value={filterStrength}
                     onChange={(event) =>
-                      switchFilterStrength(Number(event.target.value))
+                      changeFilterStrength(Number(event.target.value))
                     }
                   />
                 </div>
@@ -528,7 +546,7 @@ function App() {
                         className={`chip ${
                           activePreset === preset ? "chip--active" : ""
                         }`}
-                        onClick={() => switchPreset(preset)}>
+                        onClick={() => changePreset(preset)}>
                         {preset}
                       </button>
                     ),
@@ -546,7 +564,7 @@ function App() {
                     max={6500}
                     step={100}
                     value={colorTemp}
-                    onChange={(event) => switchColorTemp(Number(event.target.value))}
+                    onChange={(event) => changeColorTemp(Number(event.target.value))}
                   />
                 </div>
               </div>
@@ -561,7 +579,7 @@ function App() {
                     <input
                       type="checkbox"
                       checked={restEnabled}
-                      onChange={() => switchRestEnabled(!restEnabled)}
+                      onChange={() => changeRestEnabled(!restEnabled)}
                     />
                     <span className="toggle__track" />
                   </label>
@@ -573,11 +591,14 @@ function App() {
                     <input
                       className="pill__input"
                       type="number"
-                      min={15}
-                      max={120}
+                      min={30}
+                      max={180}
                       value={restMinutes}
                       onChange={(event) =>
-                        switchRestMinutes(Number(event.target.value))
+                        changeRestMinutes(Number(event.target.value))
+                      }
+                      onBlur={(event) =>
+                        blurRestMinutes(Number(event.target.value))
                       }
                     />
                     <span>分钟</span>
@@ -591,7 +612,10 @@ function App() {
                       max={30}
                       value={restDuration}
                       onChange={(event) =>
-                        switchRestDuration(Number(event.target.value))
+                        changeRestDuration(Number(event.target.value))
+                      }
+                      onBlur={(event) =>
+                        blurRestDuration(Number(event.target.value))
                       }
                     />
                     <span>分钟</span>
@@ -626,7 +650,7 @@ function App() {
                       <input
                         type="checkbox"
                         checked={filterEnabled}
-                        onChange={() => switchFilterEnabled(!filterEnabled)}
+                        onChange={() => changeFilterEnabled(!filterEnabled)}
                       />
                       <span className="toggle__track" />
                     </label>
@@ -638,7 +662,7 @@ function App() {
                       <input
                         type="checkbox"
                         checked={startupEnabled}
-                        onChange={() => switchStartupEnabled(!startupEnabled)}
+                        onChange={() => changeStartupEnabled(!startupEnabled)}
                       />
                       <span className="toggle__track" />
                     </label>
