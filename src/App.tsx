@@ -46,6 +46,8 @@ function App() {
   const [restMinutes, setRestMinutes] = useState(60);
   // 休息时间
   const [restDuration, setRestDuration] = useState(3);
+  // 休息次数
+  const [restTimes, setRestTimes] = useState(0);
   // 显示锁屏弹框
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
@@ -165,7 +167,7 @@ function App() {
   }, []);
   
   const handleExitRest = useCallback(() => {
-    invoke("log_app", { message: "前端退出休息: start" }).catch(() => undefined);
+    invoke("log_app", { message: "前端退出休息" }).catch(() => undefined);
     setShowLockScreen(false);
     hideLockWindows();
     setRestEndAt(null);
@@ -181,7 +183,6 @@ function App() {
         colorTemp,
       }).catch(() => undefined);
     }
-    invoke("log_app", { message: "前端退出休息: end" }).catch(() => undefined);
   }, [
     restEnabled,
     restMinutes,
@@ -298,20 +299,20 @@ function App() {
       setFilterEnabled(false);
     }
     const preset = localStorage.getItem("preset");
-    if (preset !== undefined) {
+    if (preset !== null) {
       setActivePreset(String(preset));
     } else {
       setActivePreset("智能");
     }
     if (preset === "自设") {
       const filterStrength = localStorage.getItem("filterStrength");
-      if (filterStrength !== undefined) {
+      if (filterStrength !== null) {
         setFilterStrength(Number(filterStrength));
       } else {
         setFilterStrength(30);
       }
       const colorTemp = localStorage.getItem("colorTemp");
-      if (colorTemp !== undefined) {
+      if (colorTemp !== null) {
         setColorTemp(Number(colorTemp));
       } else {
         setColorTemp(4700);
@@ -324,16 +325,28 @@ function App() {
       setRestEnabled(false);
     }
     const restMinutes = localStorage.getItem("restMinutes");
-    if (restMinutes !== undefined) {
+    if (restMinutes !== null) {
       setRestMinutes(Number(restMinutes));
     } else {
       setRestMinutes(60);
     }
     const restDuration = localStorage.getItem("restDuration");
-    if (restDuration !== undefined) {
+    if (restDuration !== null) {
       setRestDuration(Number(restDuration));
     } else {
       setRestDuration(3);
+    }
+    const restTimes = localStorage.getItem("restTimes");
+    if (restTimes !== null) {
+      const obj = JSON.parse((restTimes as string));
+      const date = new Date().getDate();
+      if (obj.date === date) {
+         setRestTimes(Number(obj.times));
+      } else {
+        setRestTimes(0);
+      }
+    } else {
+      setRestTimes(0);
     }
   }, []);
   
@@ -400,6 +413,12 @@ function App() {
     if (!showLockScreen || !restEndAt) return;
     if (now.getTime() >= restEndAt.getTime()) {
       handleExitRest();
+      setRestTimes((times) => {
+        const next = times + 1;
+        const date = new Date().getDate();
+        localStorage.setItem("restTimes", JSON.stringify({date, times: next}));
+        return next;
+      });
     }
   }, [handleExitRest, now, restEndAt, showLockScreen]);
 
@@ -456,7 +475,7 @@ function App() {
                 <div className="hero__stats">
                   <div>
                     <p className="stat__label">今日休息次数</p>
-                    <p className="stat__value">4 次</p>
+                    <p className="stat__value">{restTimes} 次</p>
                   </div>
                   <div>
                     <p className="stat__label">下一次休息</p>
