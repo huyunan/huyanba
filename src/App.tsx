@@ -311,6 +311,24 @@ function App() {
     } else {
       setActivePreset("智能");
     }
+    const restEnabled = localStorage.getItem("restEnabled") === "true";
+    if (restEnabled) {
+      setRestEnabled(true);
+    } else {
+      setRestEnabled(false);
+    }
+    const restMinutes = localStorage.getItem("restMinutes");
+    if (restMinutes !== undefined) {
+      setRestMinutes(Number(restMinutes));
+    } else {
+      setRestMinutes(60);
+    }
+    const restDuration = localStorage.getItem("restDuration");
+    if (restDuration !== undefined) {
+      setRestDuration(Number(restDuration));
+    } else {
+      setRestDuration(3);
+    }
   }, []);
   
   const switchStartupEnabled = async (val: boolean) => {
@@ -348,6 +366,21 @@ function App() {
       localStorage.setItem("colorTemp", String(next.temp));
       setFilterEnabled(true);
       localStorage.setItem("filterEnabled", "true");
+  }
+  
+  const switchRestEnabled = (val: boolean) => {
+      setRestEnabled(val);
+      localStorage.setItem("restEnabled", String(val));
+  }
+  
+  const switchRestMinutes = (val: number) => {
+      setRestMinutes(val);
+      localStorage.setItem("restMinutes", String(val));
+  }
+  
+  const switchRestDuration = (val: number) => {
+      setRestDuration(val);
+      localStorage.setItem("restDuration", String(val));
   }
   
   useEffect(() => {
@@ -496,7 +529,7 @@ function App() {
                     <input
                       type="checkbox"
                       checked={restEnabled}
-                      onChange={() => setRestEnabled((prev) => !prev)}
+                      onChange={() => switchRestEnabled(!restEnabled)}
                     />
                     <span className="toggle__track" />
                   </label>
@@ -512,7 +545,7 @@ function App() {
                       max={120}
                       value={restMinutes}
                       onChange={(event) =>
-                        setRestMinutes(Number(event.target.value))
+                        switchRestMinutes(Number(event.target.value))
                       }
                     />
                     <span>分钟</span>
@@ -526,7 +559,7 @@ function App() {
                       max={30}
                       value={restDuration}
                       onChange={(event) =>
-                        setRestDuration(Number(event.target.value))
+                        switchRestDuration(Number(event.target.value))
                       }
                     />
                     <span>分钟</span>
