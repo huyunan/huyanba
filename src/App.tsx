@@ -281,21 +281,38 @@ function App() {
   }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (startupEnabled) {
-          await enable();
-          console.log(`registered for autostart? ${await isEnabled()}`);
-        } else {
-          disable();
-        }
-      } catch (error) {
-        console.error('开机启动配置失败:', error);
+    const startupEnabled = localStorage.getItem("startupEnabled") === "true";
+    if (startupEnabled) {
+      setStartupEnabled(true);
+    } else {
+      setStartupEnabled(false);
+    }
+    const filterEnabled = localStorage.getItem("filterEnabled") === "true";
+    if (filterEnabled) {
+      setFilterEnabled(true);
+    } else {
+      setFilterEnabled(false);
+    }
+  }, []);
+  
+  const switchStartupEnabled = async (val: boolean) => {
+      // console.log(`isEnabled ${await isEnabled()}`);
+      if (val) {
+        // 有bug todo
+        // await enable();
+        localStorage.setItem("startupEnabled", "true");
+        setStartupEnabled(true);
+      } else {
+        // disable();
+        localStorage.setItem("startupEnabled", "false");
+        setStartupEnabled(false);
       }
-    };
-
-    fetchData();
-  }, [startupEnabled]);
+  }
+  
+  const switchFilterEnabled = (val: boolean) => {
+      localStorage.setItem("filterEnabled", String(val));
+      setFilterEnabled(val);
+  }
   
   useEffect(() => {
     if (!showLockScreen || !restEndAt) return;
@@ -379,7 +396,7 @@ function App() {
                     <input
                       type="checkbox"
                       checked={filterEnabled}
-                      onChange={() => setFilterEnabled((prev) => !prev)}
+                      onChange={() => switchFilterEnabled(!filterEnabled)}
                     />
                     <span className="toggle__track" />
                   </label>
@@ -515,7 +532,7 @@ function App() {
                       <input
                         type="checkbox"
                         checked={filterEnabled}
-                        onChange={() => setFilterEnabled((prev) => !prev)}
+                        onChange={() => switchFilterEnabled(!filterEnabled)}
                       />
                       <span className="toggle__track" />
                     </label>
@@ -527,7 +544,7 @@ function App() {
                       <input
                         type="checkbox"
                         checked={startupEnabled}
-                        onChange={() => setStartupEnabled((prev) => !prev)}
+                        onChange={() => switchStartupEnabled(!startupEnabled)}
                       />
                       <span className="toggle__track" />
                     </label>
@@ -579,3 +596,4 @@ function App() {
 }
 
 export default App;
+
