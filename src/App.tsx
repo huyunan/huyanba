@@ -297,7 +297,19 @@ function App() {
     if (filterStrength !== undefined) {
       setFilterStrength(Number(filterStrength));
     } else {
-      setFilterStrength(Number(filterStrength));
+      setFilterStrength(30);
+    }
+    const colorTemp = localStorage.getItem("colorTemp");
+    if (colorTemp !== undefined) {
+      setColorTemp(Number(colorTemp));
+    } else {
+      setColorTemp(4700);
+    }
+    const preset = localStorage.getItem("preset");
+    if (preset !== undefined) {
+      setActivePreset(String(preset));
+    } else {
+      setActivePreset("智能");
     }
   }, []);
   
@@ -306,23 +318,36 @@ function App() {
       if (val) {
         // 有bug todo
         // await enable();
-        localStorage.setItem("startupEnabled", "true");
         setStartupEnabled(true);
+        localStorage.setItem("startupEnabled", "true");
       } else {
         // disable();
-        localStorage.setItem("startupEnabled", "false");
         setStartupEnabled(false);
+        localStorage.setItem("startupEnabled", "false");
       }
   }
   
   const switchFilterEnabled = (val: boolean) => {
-      localStorage.setItem("filterEnabled", String(val));
       setFilterEnabled(val);
+      localStorage.setItem("filterEnabled", String(val));
   }
   
   const switchFilterStrength = (val: number) => {
-      localStorage.setItem("filterStrength", String(val));
       setFilterStrength(val);
+      localStorage.setItem("filterStrength", String(val));
+  }
+  
+  const switchColorTemp = (preset: "智能" | "办公" | "影视" | "游戏") => {
+      setActivePreset(preset);
+      localStorage.setItem("preset", String(preset));
+      const next = resolvePreset(preset);
+      
+      setFilterStrength(next.strength);
+      localStorage.setItem("filterStrength", String(next.strength));
+      setColorTemp(next.temp);
+      localStorage.setItem("colorTemp", String(next.temp));
+      setFilterEnabled(true);
+      localStorage.setItem("filterEnabled", "true");
   }
   
   useEffect(() => {
@@ -438,14 +463,7 @@ function App() {
                         className={`chip ${
                           activePreset === preset ? "chip--active" : ""
                         }`}
-                        onClick={() => {
-                          setActivePreset(preset);
-                          const next = resolvePreset(preset);
-                          setFilterStrength(next.strength);
-                          setColorTemp(next.temp);
-                          setFilterEnabled(true);
-                        }}
-                      >
+                        onClick={() => switchColorTemp(preset)}>
                         {preset}
                       </button>
                     ),
