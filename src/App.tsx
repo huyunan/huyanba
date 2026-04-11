@@ -351,7 +351,7 @@ function App() {
       setActivePreset(String(preset));
     } else {
       setActivePreset("智能");
-      localStorage.setItem("restEnabled", "智能");
+      localStorage.setItem("preset", "智能");
     }
     if (preset === "自设") {
       const filterStrength = localStorage.getItem("filterStrength");
