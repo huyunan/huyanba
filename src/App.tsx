@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
@@ -33,6 +34,8 @@ function App() {
   const [now, setNow] = useState(new Date());
   // 过滤蓝光开关
   const [filterEnabled, setFilterEnabled] = useState(true);
+  // 开机自启
+  const [startupEnabled, setStartupEnabled] = useState(false);
   // 强度
   const [filterStrength, setFilterStrength] = useState(30);
   // 色调
@@ -278,6 +281,23 @@ function App() {
   }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (startupEnabled) {
+          await enable();
+          console.log(`registered for autostart? ${await isEnabled()}`);
+        } else {
+          disable();
+        }
+      } catch (error) {
+        console.error('开机启动配置失败:', error);
+      }
+    };
+
+    fetchData();
+  }, [startupEnabled]);
+  
+  useEffect(() => {
     if (!showLockScreen || !restEndAt) return;
     if (now.getTime() >= restEndAt.getTime()) {
       handleExitRest();
@@ -504,7 +524,11 @@ function App() {
                   <label className="setting-row">
                     <span>开机自启</span>
                     <label className="toggle">
-                      <input type="checkbox" />
+                      <input
+                        type="checkbox"
+                        checked={startupEnabled}
+                        onChange={() => setStartupEnabled((prev) => !prev)}
+                      />
                       <span className="toggle__track" />
                     </label>
                   </label>

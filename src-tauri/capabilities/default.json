@@ -11,6 +11,9 @@
     "core:tray:default",
     "core:window:default",
     "dialog:default",
-    "opener:default"
+    "opener:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

@@ -1,8 +1,8 @@
-use chrono::{DateTime, Utc, FixedOffset};
+use chrono::{DateTime, FixedOffset, Utc};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
-use std::io::{Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -269,10 +269,7 @@ async fn show_lock_windows(
         let x = (position.x as f64 / scale).floor() - 200.0;
         let y = (position.y as f64 / scale).floor() - 200.0;
 
-        let url = format!(
-            "index.html?lockscreen=1&end={}",
-            end_at_ms,
-        );
+        let url = format!("index.html?lockscreen=1&end={}", end_at_ms,);
         let window = WebviewWindowBuilder::new(&app, label.clone(), WebviewUrl::App(url.into()))
             .decorations(false)
             .transparent(false)
@@ -383,9 +380,7 @@ fn storage_settings_from_config(
     })
 }
 
-fn get_storage_settings_inner(
-    app: &AppHandle,
-) -> Result<RestStorageSettings, String> {
+fn get_storage_settings_inner(app: &AppHandle) -> Result<RestStorageSettings, String> {
     let config_path = storage_config_path(app)?;
     let config = load_storage_config(&config_path);
     storage_settings_from_config(app, &config)
@@ -439,6 +434,7 @@ fn apply_default_window_icon<R: tauri::Runtime>(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
