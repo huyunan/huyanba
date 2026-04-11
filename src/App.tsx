@@ -558,8 +558,8 @@ function App() {
                   </div>
                   <input
                     type="range"
-                    min={0}
-                    max={40000}
+                    min={-3000}
+                    max={10000}
                     step={100}
                     value={colorTemp}
                     onChange={(event) => changeColorTemp(Number(event.target.value))}

@@ -168,7 +168,7 @@ fn clamp(value: f64, min: f64, max: f64) -> f64 {
 }
 
 fn temperature_to_rgb(temp: f64) -> (f64, f64, f64) {
-    let temp = clamp(temp, 1000.0, 40000.0) / 100.0;
+    let temp = clamp(temp, -3000.0, 10000.0) / 100.0;
     let (mut r, mut g, mut b);
     if temp <= 66.0 {
         r = 255.0;
