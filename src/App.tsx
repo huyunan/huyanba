@@ -67,6 +67,10 @@ function App() {
         day: { temp: 4700, strength: 30 },
         night: { temp: 3400, strength: 30 },
       },
+      自设: {
+        day: { temp: 5200, strength: 50 },
+        night: { temp: 4700, strength: 60 },
+      },
       办公: {
         day: { temp: 5200, strength: 50 },
         night: { temp: 4700, strength: 60 },
@@ -352,20 +356,27 @@ function App() {
   
   const switchFilterStrength = (val: number) => {
       setFilterStrength(val);
+      if (activePreset !== "自设") return;
       localStorage.setItem("filterStrength", String(val));
   }
   
-  const switchColorTemp = (preset: "智能" | "办公" | "影视" | "游戏") => {
+  const switchColorTemp = (val: number) => {
+      setColorTemp(val);
+      if (activePreset !== "自设") return;
+      localStorage.setItem("colorTemp", String(val));
+  }
+  
+  const switchPreset = (preset: "智能" | "自设" | "办公" | "影视" | "游戏") => {
       setActivePreset(preset);
       localStorage.setItem("preset", String(preset));
       const next = resolvePreset(preset);
       
       setFilterStrength(next.strength);
-      localStorage.setItem("filterStrength", String(next.strength));
       setColorTemp(next.temp);
-      localStorage.setItem("colorTemp", String(next.temp));
       setFilterEnabled(true);
-      localStorage.setItem("filterEnabled", "true");
+      if (preset !== "自设") return;
+      localStorage.setItem("filterStrength", String(next.strength));
+      localStorage.setItem("colorTemp", String(next.temp));
   }
   
   const switchRestEnabled = (val: boolean) => {
@@ -496,7 +507,7 @@ function App() {
                         className={`chip ${
                           activePreset === preset ? "chip--active" : ""
                         }`}
-                        onClick={() => switchColorTemp(preset)}>
+                        onClick={() => switchPreset(preset)}>
                         {preset}
                       </button>
                     ),
@@ -514,7 +525,7 @@ function App() {
                     max={6500}
                     step={100}
                     value={colorTemp}
-                    onChange={(event) => setColorTemp(Number(event.target.value))}
+                    onChange={(event) => switchColorTemp(Number(event.target.value))}
                   />
                 </div>
               </div>
