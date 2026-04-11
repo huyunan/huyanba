@@ -7,7 +7,6 @@ import {
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { enable, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
-import { register, unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
 import "./App.css";
 
 function pad2(value: number) {
@@ -126,9 +125,11 @@ function App() {
   };
   
   const handleStartRest = useCallback(() => {
+    if (localStorage.getItem("restEnabled") !== "true") return;
+    if (isNotificationWindow) return;
     const endAt = restDuraAt();
     setRestEndAt(endAt);
-    setShowLockScreen(true);
+    changeShowLockScreen(true);
     showLockWindows();
   }, [restDuration]);
   
@@ -176,7 +177,7 @@ function App() {
   
   const handleExitRest = useCallback(() => {
     invoke("log_app", { message: "前端退出休息" }).catch(() => undefined);
-    setShowLockScreen(false);
+    changeShowLockScreen(false);
     hideLockWindows();
     setRestEndAt(null);
     if (restEnabled) {
@@ -295,13 +296,14 @@ function App() {
     if (now.getTime() >= nextRestAt.getTime()) {
       const endAt = restDuraAt();
       setRestEndAt(endAt);
-      setShowLockScreen(true);
+      changeShowLockScreen(true);
       showLockWindows();
     }
   }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
   
   const registerKey = () => {
     if (localStorage.getItem("autoKeyEnabled") !== "true") return;
+    if (localStorage.getItem("showLockScreen") === "true") return;
     const restEnabled = localStorage.getItem("restEnabled") === "true";
     const message = restEnabled ? "关闭功能" : "开启功能";
     changeRestEnabled(!restEnabled);
@@ -356,6 +358,7 @@ function App() {
         setColorTemp(4700);
       }
     }
+    setShowLockScreen(false);
     const autoKeyEnabled = localStorage.getItem("autoKeyEnabled");
     if (autoKeyEnabled === null || autoKeyEnabled === "true") {
       setAutoKeyEnabled(true);
@@ -413,6 +416,11 @@ function App() {
   const changeRestEnabled = (val: boolean) => {
       setRestEnabled(val);
       localStorage.setItem("restEnabled", String(val));
+  }
+  
+  const changeShowLockScreen = (val: boolean) => {
+      setShowLockScreen(val);
+      localStorage.setItem("showLockScreen", String(val));
   }
   
   const changeFilterStrength = (val: number) => {
