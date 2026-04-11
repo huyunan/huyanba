@@ -7,6 +7,7 @@ import {
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { enable, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
+import { register, unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
 import "./App.css";
 
 function pad2(value: number) {
@@ -31,17 +32,22 @@ function formatDuration2(totalSeconds: number) {
 function App() {
   const isLockWindow =
     new URLSearchParams(window.location.search).get("lockscreen") === "1";
+  const isNotificationWindow =
+    new URLSearchParams(window.location.search).get("notification") === "1";
   const [now, setNow] = useState(new Date());
   // 过滤蓝光开关
   const [filterEnabled, setFilterEnabled] = useState(true);
   // 开机自启
   const [startupEnabled, setStartupEnabled] = useState(false);
+  // 休息节奏开关
+  const [restEnabled, setRestEnabled] = useState(true);
+  // 定时休息快捷键
+  const [autoKeyEnabled, setAutoKeyEnabled] = useState(true);
+  const [autoKeyMsg, setAutoKeyMsg] = useState("");
   // 强度
   const [filterStrength, setFilterStrength] = useState(30);
   // 色调
   const [colorTemp, setColorTemp] = useState(4700);
-  // 休息节奏开关
-  const [restEnabled, setRestEnabled] = useState(true);
   // 休息间隔
   const [restMinutes, setRestMinutes] = useState(60);
   // 休息时间
@@ -136,9 +142,9 @@ function App() {
   const hideLockWindows = () => {
     invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
     invoke("hide_lock_windows").catch((error) =>
-      console.error("锁屏窗口关闭失败", error),
+      console.error("锁屏窗口关闭失败", error)
     );
-  }  
+  }
   
   useEffect(() => {
     if (!showLockScreen) return;
@@ -152,6 +158,8 @@ function App() {
       .listen<string>("lockscreen-action", (event) => {
         if (event.payload === "exit") {
           handleExitRest();
+        } else if (event.payload === "notification") {
+          registerKey();
         }
       })
       .then((fn) => {
@@ -237,6 +245,13 @@ function App() {
   }, [isLockWindow]);
   
   useEffect(() => {
+    if (!isNotificationWindow) return;
+    const params = new URLSearchParams(window.location.search);
+    const message = params.get("message") || "休息一下，放松眼睛";
+    setAutoKeyMsg(message);
+  }, [isNotificationWindow]);
+  
+  useEffect(() => {
     if (!isLockWindow) return;
     const timer = setInterval(() => {
       const nowValue = new Date();
@@ -284,7 +299,24 @@ function App() {
       showLockWindows();
     }
   }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
-
+  
+  const registerKey = () => {
+    if (!autoKeyEnabled) return;
+    const restEnabled = localStorage.getItem("restEnabled") === "true";
+    const message = restEnabled ? "关闭功能" : "开启功能";
+    changeRestEnabled(!restEnabled);
+    
+    invoke("show_notification_windows", {
+      message: message,
+    }).then(() => {
+      setTimeout(() => {
+        invoke("hide_notification_windows").catch((error) =>
+          console.error("通知窗口关闭失败", error)
+        );
+      }, 2000);
+    }).catch((error) => console.error("通知窗口开启失败", error));
+  }
+  
   useEffect(() => {
     const startupEnabled = localStorage.getItem("startupEnabled") === "true";
     if (startupEnabled) {
@@ -297,6 +329,12 @@ function App() {
       setFilterEnabled(true);
     } else {
       setFilterEnabled(false);
+    }
+    const restEnabled = localStorage.getItem("restEnabled");
+    if (restEnabled === null || restEnabled === "true") {
+      setRestEnabled(true);
+    } else {
+      setRestEnabled(false);
     }
     const preset = localStorage.getItem("preset");
     if (preset !== null) {
@@ -318,11 +356,11 @@ function App() {
         setColorTemp(4700);
       }
     }
-    const restEnabled = localStorage.getItem("restEnabled");
-    if (restEnabled === null || restEnabled === "true") {
-      setRestEnabled(true);
+    const autoKeyEnabled = localStorage.getItem("autoKeyEnabled");
+    if (autoKeyEnabled === null || autoKeyEnabled === "true") {
+      setAutoKeyEnabled(true);
     } else {
-      setRestEnabled(false);
+      setAutoKeyEnabled(false);
     }
     const restMinutes = localStorage.getItem("restMinutes");
     if (restMinutes !== null) {
@@ -362,9 +400,19 @@ function App() {
       }
   }
   
+  const changeAutoKeyEnabled = (val: boolean) => {
+      setAutoKeyEnabled(val);
+      localStorage.setItem("autoKeyEnabled", String(val));
+  }
+  
   const changeFilterEnabled = (val: boolean) => {
       setFilterEnabled(val);
       localStorage.setItem("filterEnabled", String(val));
+  }
+  
+  const changeRestEnabled = (val: boolean) => {
+      setRestEnabled(val);
+      localStorage.setItem("restEnabled", String(val));
   }
   
   const changeFilterStrength = (val: number) => {
@@ -390,11 +438,6 @@ function App() {
       if (preset !== "自设") return;
       localStorage.setItem("filterStrength", String(next.strength));
       localStorage.setItem("colorTemp", String(next.temp));
-  }
-  
-  const changeRestEnabled = (val: boolean) => {
-      setRestEnabled(val);
-      localStorage.setItem("restEnabled", String(val));
   }
   
   const changeRestMinutes = (val: number) => {
@@ -461,7 +504,7 @@ function App() {
 
   return (
     <div className="app">
-      {!isLockWindow && (
+      {!isLockWindow && !isNotificationWindow && (
         <>
           <div className="ambient ambient--one" />
           <div className="ambient ambient--two" />
@@ -513,7 +556,8 @@ function App() {
                     <input
                       type="checkbox"
                       checked={filterEnabled}
-                      onChange={() => changeFilterEnabled(!filterEnabled)}
+                      onChange={() => {}}
+                      onClick={() => changeFilterEnabled(!filterEnabled)}
                     />
                     <span className="toggle__track" />
                   </label>
@@ -577,7 +621,8 @@ function App() {
                     <input
                       type="checkbox"
                       checked={restEnabled}
-                      onChange={() => changeRestEnabled(!restEnabled)}
+                      onChange={() => {}}
+                      onClick={() => changeRestEnabled(!restEnabled)}
                     />
                     <span className="toggle__track" />
                   </label>
@@ -648,7 +693,21 @@ function App() {
                       <input
                         type="checkbox"
                         checked={filterEnabled}
-                        onChange={() => changeFilterEnabled(!filterEnabled)}
+                        onChange={() => {}}
+                        onClick={() => changeFilterEnabled(!filterEnabled)}
+                      />
+                      <span className="toggle__track" />
+                    </label>
+                  </label>
+
+                  <label className="setting-row">
+                    <span>定时休息快捷键（Alt + 2）</span>
+                    <label className="toggle">
+                      <input
+                        type="checkbox"
+                        checked={autoKeyEnabled}
+                        onChange={() => {}}
+                        onClick={() => changeAutoKeyEnabled(!autoKeyEnabled)}
                       />
                       <span className="toggle__track" />
                     </label>
@@ -660,7 +719,8 @@ function App() {
                       <input
                         type="checkbox"
                         checked={startupEnabled}
-                        onChange={() => changeStartupEnabled(!startupEnabled)}
+                        onChange={() => {}}
+                        onClick={() => changeStartupEnabled(!startupEnabled)}
                       />
                       <span className="toggle__track" />
                     </label>
@@ -697,13 +757,21 @@ function App() {
                 type="button"
                 onClick={() => {
                   invoke("lockscreen_action", {action: "exit"}).catch((error) =>
-                    console.error("锁屏窗口关闭失败", error),
+                    console.error("锁屏窗口关闭失败", error)
                   )}
                 }
               >
                 跳过休息
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {isNotificationWindow && (
+        <div className="notification">
+          <div className="notification__center">
+            <p>{autoKeyMsg}</p>
           </div>
         </div>
       )}

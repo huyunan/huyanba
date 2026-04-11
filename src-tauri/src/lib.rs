@@ -15,11 +15,11 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent,
 };
+use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_autostart::ManagerExt;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC};
 use windows::Win32::UI::ColorSystem::SetDeviceGammaRamp;
-use tauri_plugin_autostart::MacosLauncher;
-use tauri_plugin_autostart::ManagerExt;
 
 #[derive(Default)]
 struct LockState {
@@ -322,6 +322,80 @@ fn hide_lock_windows(
 }
 
 #[tauri::command]
+async fn show_notification_windows(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, LockState>,
+    message: String,
+) -> Result<(), String> {
+    let start = Instant::now();
+    let mut labels = state.labels.lock().map_err(|_| "锁状态被占用")?;
+    if !labels.is_empty() {
+        for label in labels.iter() {
+            if let Some(window) = app.get_webview_window(label) {
+                let _ = window.set_always_on_top(true);
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }
+        return Ok(());
+    }
+
+    let monitors = app.available_monitors().map_err(|err| err.to_string())?;
+    append_app_log(&app, &format!("通知创建开始 monitors={}", monitors.len()));
+    for (index, monitor) in monitors.into_iter().enumerate() {
+        let label = format!("notification-{}", index);
+
+        let url = format!("index.html?notification=1&message={}", message,);
+        let window = WebviewWindowBuilder::new(&app, label.clone(), WebviewUrl::App(url.into()))
+            .decorations(false)
+            .transparent(false)
+            .resizable(true)
+            .always_on_top(true)
+            .skip_taskbar(true)
+            .inner_size(200.0, 100.0)
+            .center()
+            .build()
+            .map_err(|err| err.to_string())?;
+
+        apply_default_window_icon(&app, &window);
+        let _ = window.set_fullscreen(false);
+        let _ = window.set_focus();
+        labels.push(label);
+    }
+
+    append_app_log(
+        &app,
+        &format!(
+            "通知创建完成 labels={} elapsed_ms={}",
+            labels.len(),
+            start.elapsed().as_millis()
+        ),
+    );
+    Ok(())
+}
+
+#[tauri::command]
+fn hide_notification_windows(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, LockState>,
+) -> Result<(), String> {
+    let start = Instant::now();
+    let mut labels = state.labels.lock().map_err(|_| "锁状态被占用")?;
+    append_app_log(&app, &format!("通知关闭开始 labels={}", labels.len()));
+    for label in labels.iter() {
+        if let Some(window) = app.get_webview_window(label) {
+            let _ = window.close();
+        }
+    }
+    labels.clear();
+    append_app_log(
+        &app,
+        &format!("通知关闭完成 {}ms", start.elapsed().as_millis()),
+    );
+    Ok(())
+}
+
+#[tauri::command]
 fn lockscreen_action(app: tauri::AppHandle, action: String) -> Result<(), String> {
     append_app_log(&app, &format!("锁屏动作: {}", action));
     for (_label, window) in app.webview_windows() {
@@ -436,6 +510,7 @@ fn apply_default_window_icon<R: tauri::Runtime>(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             MacosLauncher::LaunchAgent,
             Some(vec!["--flag1", "--flag2"]),
@@ -449,7 +524,35 @@ pub fn run() {
             let _ = autostart_manager.enable();
             // 禁用 autostart
             let _ = autostart_manager.disable();
-            
+
+            use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+            let shift_1_shortcut = Shortcut::new(Some(Modifiers::SHIFT), Code::Digit1);
+            let app_handle = app.handle();
+            app_handle.plugin(
+                tauri_plugin_global_shortcut::Builder::new().with_handler({
+                    let app_handle = app_handle.clone();
+                    let shift_1_shortcut = shift_1_shortcut.clone();
+                    move |_app, shortcut, event| {
+                        if shortcut == &shift_1_shortcut {
+                            match event.state() {
+                                ShortcutState::Pressed => {
+                                    println!("Shift-1 Pressed!");
+                                    for (_label, window) in app_handle.webview_windows() {
+                                        println!("Shift-1 lockscreen! {}", _label);
+                                        let _ = window.emit("lockscreen-action", "notification");
+                                    }
+                                }
+                                ShortcutState::Released => {
+                                    println!("Shift-1 Released!");
+                                }
+                            }
+                        }
+                    }
+                })
+                .build(),
+            )?;
+            app.global_shortcut().register(shift_1_shortcut)?;
+                
             let dir = ensure_dir(app.handle())?;
             allow_dir_on_scope(app.handle(), &dir)?;
             if let Some(window) = app.get_webview_window("main") {
@@ -556,6 +659,8 @@ pub fn run() {
             lockscreen_action,
             show_lock_windows,
             hide_lock_windows,
+            show_notification_windows,
+            hide_notification_windows,
             log_app
         ])
         .run(tauri::generate_context!())

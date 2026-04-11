@@ -917,6 +917,23 @@ input[type="range"] {
   color: #20302f;
 }
 
+.notification {
+  --lockscreen-bg: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  font-weight: bold;
+  place-items: center;
+  color: #292902;
+  animation: fadeIn 0.5s ease both;
+  background-color: #f2d08f;
+}
+
+.notification__center {
+  text-align: center;
+}
+
 .lockscreen {
   --lockscreen-bg: none;
   position: fixed;
