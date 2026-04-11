@@ -297,23 +297,25 @@ function App() {
     } else {
       setFilterEnabled(false);
     }
-    const filterStrength = localStorage.getItem("filterStrength");
-    if (filterStrength !== undefined) {
-      setFilterStrength(Number(filterStrength));
-    } else {
-      setFilterStrength(30);
-    }
-    const colorTemp = localStorage.getItem("colorTemp");
-    if (colorTemp !== undefined) {
-      setColorTemp(Number(colorTemp));
-    } else {
-      setColorTemp(4700);
-    }
     const preset = localStorage.getItem("preset");
     if (preset !== undefined) {
       setActivePreset(String(preset));
     } else {
       setActivePreset("智能");
+    }
+    if (preset === "自设") {
+      const filterStrength = localStorage.getItem("filterStrength");
+      if (filterStrength !== undefined) {
+        setFilterStrength(Number(filterStrength));
+      } else {
+        setFilterStrength(30);
+      }
+      const colorTemp = localStorage.getItem("colorTemp");
+      if (colorTemp !== undefined) {
+        setColorTemp(Number(colorTemp));
+      } else {
+        setColorTemp(4700);
+      }
     }
     const restEnabled = localStorage.getItem("restEnabled") === "true";
     if (restEnabled) {
