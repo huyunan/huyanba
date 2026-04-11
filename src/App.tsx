@@ -5,7 +5,7 @@ import {
   useState,
 } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
+import { enable, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
