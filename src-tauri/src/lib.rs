@@ -314,7 +314,7 @@ fn hide_lock_windows(
     labels.clear();
     append_app_log(
         &app,
-        &format!("锁屏关闭完成 elapsed_ms={}", start.elapsed().as_millis()),
+        &format!("锁屏关闭完成 {}ms", start.elapsed().as_millis()),
     );
     Ok(())
 }
