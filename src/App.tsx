@@ -293,6 +293,12 @@ function App() {
     } else {
       setFilterEnabled(false);
     }
+    const filterStrength = localStorage.getItem("filterStrength");
+    if (filterStrength !== undefined) {
+      setFilterStrength(Number(filterStrength));
+    } else {
+      setFilterStrength(Number(filterStrength));
+    }
   }, []);
   
   const switchStartupEnabled = async (val: boolean) => {
@@ -312,6 +318,11 @@ function App() {
   const switchFilterEnabled = (val: boolean) => {
       localStorage.setItem("filterEnabled", String(val));
       setFilterEnabled(val);
+  }
+  
+  const switchFilterStrength = (val: number) => {
+      localStorage.setItem("filterStrength", String(val));
+      setFilterStrength(val);
   }
   
   useEffect(() => {
@@ -413,7 +424,7 @@ function App() {
                     max={100}
                     value={filterStrength}
                     onChange={(event) =>
-                      setFilterStrength(Number(event.target.value))
+                      switchFilterStrength(Number(event.target.value))
                     }
                   />
                 </div>
