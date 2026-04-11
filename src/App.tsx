@@ -130,6 +130,7 @@ function App() {
     const endAt = restDuraAt();
     setRestEndAt(endAt);
     changeShowLockScreen(true);
+    console.log("showLockScreen_true_2", localStorage.getItem("showLockScreen"), new Date().getMinutes(), new Date().getSeconds());
     showLockWindows();
   }, [restDuration]);
   
@@ -178,6 +179,7 @@ function App() {
   const handleExitRest = useCallback(() => {
     invoke("log_app", { message: "前端退出休息" }).catch(() => undefined);
     changeShowLockScreen(false);
+    console.log("showLockScreen_2", localStorage.getItem("showLockScreen"), new Date().getMinutes(), new Date().getSeconds());
     hideLockWindows();
     setRestEndAt(null);
     if (restEnabled) {
@@ -312,6 +314,7 @@ function App() {
       const endAt = restDuraAt();
       setRestEndAt(endAt);
       changeShowLockScreen(true);
+    console.log("showLockScreen_true_1", localStorage.getItem("showLockScreen"), new Date().getMinutes(), new Date().getSeconds());
       showLockWindows();
     }
   }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
@@ -319,6 +322,7 @@ function App() {
   const registerKey = () => {
     if (localStorage.getItem("autoKeyEnabled") !== "true") return;
     if (localStorage.getItem("showLockScreen") === "true") return;
+    if (isLockWindow) return;
     const restEnabled = localStorage.getItem("restEnabled") === "true";
     const message = restEnabled ? "关闭功能" : "开启功能";
     changeRestEnabled(!restEnabled);
@@ -385,8 +389,13 @@ function App() {
       }
     }
     
-    changeShowLockScreen(false);
-    
+    const showLockScreen = localStorage.getItem("showLockScreen") === "true";
+    if (showLockScreen) {
+      changeShowLockScreen(true);
+    } else {
+      changeShowLockScreen(false);
+    }
+        
     const autoKeyEnabled = localStorage.getItem("autoKeyEnabled");
     if (autoKeyEnabled === null || autoKeyEnabled === "true") {
       setAutoKeyEnabled(true);
@@ -456,6 +465,7 @@ function App() {
   }
   
   const changeShowLockScreen = (val: boolean) => {
+    console.log("showLockScreen_3", val, new Date().getMinutes(), new Date().getSeconds());
       setShowLockScreen(val);
       localStorage.setItem("showLockScreen", String(val));
   }
