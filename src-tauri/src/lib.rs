@@ -542,8 +542,18 @@ pub fn run() {
                         if shortcut == &shift_1_shortcut {
                             match event.state() {
                                 ShortcutState::Pressed => {
+                                    let mut window_main = None;
                                     for (_label, window) in app_handle.webview_windows() {
+                                        if _label.as_str().starts_with("main") {
+                                            window_main = window.clone().into();
+                                        } else{
+                                            return;
+                                        }
+                                    }
+                                    if let Some(window) = window_main {
                                         let _ = window.emit("lockscreen-action", "notification");
+                                    } else {
+                                        return;
                                     }
                                 }
                                 ShortcutState::Released => {

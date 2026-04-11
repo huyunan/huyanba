@@ -323,6 +323,7 @@ function App() {
     if (localStorage.getItem("autoKeyEnabled") !== "true") return;
     if (localStorage.getItem("showLockScreen") === "true") return;
     if (isLockWindow) return;
+    if (isNotificationWindow) return;
     const restEnabled = localStorage.getItem("restEnabled") === "true";
     const message = restEnabled ? "关闭功能" : "开启功能";
     changeRestEnabled(!restEnabled);
@@ -465,7 +466,6 @@ function App() {
   }
   
   const changeShowLockScreen = (val: boolean) => {
-    console.log("showLockScreen_3", val, new Date().getMinutes(), new Date().getSeconds());
       setShowLockScreen(val);
       localStorage.setItem("showLockScreen", String(val));
   }
