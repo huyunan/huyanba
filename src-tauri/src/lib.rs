@@ -345,7 +345,7 @@ async fn show_notification_windows(
 
     let monitors = app.available_monitors().map_err(|err| err.to_string())?;
     append_app_log(&app, &format!("通知创建开始 monitors={}", monitors.len()));
-    for (index, monitor) in monitors.into_iter().enumerate() {
+    for (index, _monitor) in monitors.into_iter().enumerate() {
         let label = format!("notification-{}", index);
 
         let url = format!("index.html?notification=1&message={}", message,);
