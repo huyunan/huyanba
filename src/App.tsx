@@ -205,6 +205,17 @@ function App() {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      invoke("set_gamma", {
+        filterEnabled,
+        strength: filterStrength,
+        colorTemp,
+      }).catch(() => undefined);
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (isLockWindow) return;
