@@ -208,12 +208,16 @@ function App() {
   
   useEffect(() => {
     const timer = setInterval(() => {
+      const filterEnabled = localStorage.getItem("filterEnabled") === "true";
+      if (!filterEnabled) return;
+      const filterStrength = localStorage.getItem("filterStrength") || "30";
+      const colorTemp = localStorage.getItem("colorTemp") || "4700";
       invoke("set_gamma", {
         filterEnabled,
-        strength: filterStrength,
-        colorTemp,
+        strength: Number(filterStrength),
+        colorTemp: Number(colorTemp),
       }).catch(() => undefined);
-    }, 15000);
+    }, 1500);
     return () => clearInterval(timer);
   }, []);
 
