@@ -5,7 +5,7 @@ import {
   useState,
 } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
+// import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
@@ -453,7 +453,7 @@ function App() {
 
           <header className="topbar">
             <div className="brand">
-              <img className="brand__icon" src="/huyanba-mark.svg" alt="" />
+              <img className="brand__icon" src="/huyanba.svg" alt="" />
               <div>
                 <p className="brand__name">护眼吧</p>
                 <p className="brand__tag">清醒护眼 · 专注节奏</p>

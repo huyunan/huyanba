@@ -13,7 +13,7 @@
 ![首页总览](docs/images/dashboard-overview.png)
 
 ## 版本
-- 当前打包版本：`2.1.0`
+- 当前打包版本：`3.0.0`
 
 ## 安装包位置（本机）
 ```
@@ -21,13 +21,13 @@ D:\Ai\huyanba\huzamba\aseet
 ```
 
 当前已整理的打包产物：
-- `aseet\huyanba_2.1.0_x64-setup.exe`
-- `aseet\huyanba_2.1.0_x64_en-US.msi`
+- `aseet\huyanba_3.0.0_x64-setup.exe`
+- `aseet\huyanba_3.0.0_x64_en-US.msi`
 
 ## 下载
-- [点击下载便携版 EXE（NSIS 安装包）](https://github.com/guoruya/huyanba/releases/download/v2.1.0/huyanba_2.1.0_x64-setup.exe)
-- [点击下载 MSI 安装包](https://github.com/guoruya/huyanba/releases/download/v2.1.0/huyanba_2.1.0_x64_en-US.msi)
-- [查看 v2.1.0 Release 页面](https://github.com/guoruya/huyanba/releases/tag/v2.1.0)
+- [点击下载便携版 EXE（NSIS 安装包）](https://github.com/guoruya/huyanba/releases/download/v3.0.0/huyanba_3.0.0_x64-setup.exe)
+- [点击下载 MSI 安装包](https://github.com/guoruya/huyanba/releases/download/v3.0.0/huyanba_3.0.0_x64_en-US.msi)
+- [查看 v3.0.0 Release 页面](https://github.com/guoruya/huyanba/releases/tag/v3.0.0)
 
 ## 本地开发
 ```
