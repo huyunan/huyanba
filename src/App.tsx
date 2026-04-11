@@ -301,7 +301,7 @@ function App() {
   }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
   
   const registerKey = () => {
-    if (!autoKeyEnabled) return;
+    if (localStorage.getItem("autoKeyEnabled") !== "true") return;
     const restEnabled = localStorage.getItem("restEnabled") === "true";
     const message = restEnabled ? "关闭功能" : "开启功能";
     changeRestEnabled(!restEnabled);
@@ -389,6 +389,7 @@ function App() {
   }, []);
   
   const changeStartupEnabled = async (val: boolean) => {
+    console.log("autoKeyEnabled:", autoKeyEnabled);
       if (val) {
         await enable();
         setStartupEnabled(true);
@@ -701,7 +702,7 @@ function App() {
                   </label>
 
                   <label className="setting-row">
-                    <span>定时休息快捷键（Alt + 2）</span>
+                    <span>定时休息快捷键（Shift + 1）</span>
                     <label className="toggle">
                       <input
                         type="checkbox"
