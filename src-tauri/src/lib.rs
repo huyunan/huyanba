@@ -309,6 +309,9 @@ fn hide_lock_windows(
     let mut labels = state.labels.lock().map_err(|_| "锁状态被占用")?;
     append_app_log(&app, &format!("锁屏关闭开始 labels={}", labels.len()));
     for label in labels.iter() {
+        if !label.as_str().starts_with("lockscreen-") {
+            continue;
+        }
         if let Some(window) = app.get_webview_window(label) {
             let _ = window.close();
         }
@@ -383,6 +386,9 @@ fn hide_notification_windows(
     let mut labels = state.labels.lock().map_err(|_| "锁状态被占用")?;
     append_app_log(&app, &format!("通知关闭开始 labels={}", labels.len()));
     for label in labels.iter() {
+        if !label.as_str().starts_with("notification-") {
+            continue;
+        }
         if let Some(window) = app.get_webview_window(label) {
             let _ = window.close();
         }
@@ -536,9 +542,7 @@ pub fn run() {
                         if shortcut == &shift_1_shortcut {
                             match event.state() {
                                 ShortcutState::Pressed => {
-                                    println!("Shift-1 Pressed!");
                                     for (_label, window) in app_handle.webview_windows() {
-                                        println!("Shift-1 lockscreen! {}", _label);
                                         let _ = window.emit("lockscreen-action", "notification");
                                     }
                                 }
