@@ -526,7 +526,7 @@ pub fn run() {
             let _ = autostart_manager.disable();
 
             use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
-            let shift_1_shortcut = Shortcut::new(Some(Modifiers::SHIFT), Code::Digit1);
+            let shift_1_shortcut = Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::Digit1);
             let app_handle = app.handle();
             app_handle.plugin(
                 tauri_plugin_global_shortcut::Builder::new().with_handler({
@@ -543,7 +543,6 @@ pub fn run() {
                                     }
                                 }
                                 ShortcutState::Released => {
-                                    println!("Shift-1 Released!");
                                 }
                             }
                         }

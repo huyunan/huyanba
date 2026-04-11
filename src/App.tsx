@@ -389,7 +389,6 @@ function App() {
   }, []);
   
   const changeStartupEnabled = async (val: boolean) => {
-    console.log("autoKeyEnabled:", autoKeyEnabled);
       if (val) {
         await enable();
         setStartupEnabled(true);
@@ -702,7 +701,7 @@ function App() {
                   </label>
 
                   <label className="setting-row">
-                    <span>定时休息快捷键（Shift + 1）</span>
+                    <span>定时休息快捷键（Alt + Shift + 1）</span>
                     <label className="toggle">
                       <input
                         type="checkbox"
