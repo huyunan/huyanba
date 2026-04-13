@@ -27,7 +27,7 @@ huyanba\src-tauri\target\release\bundle\nsis
 ```
 
 ## 下载
-https://github.com/huyunan/huyanba/releases/tag/v3.1.0
+https://github.com/huyunan/huyanba/releases/tag/v3.1.0_2
 
 ## 本地开发
 ```
