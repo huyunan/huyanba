@@ -188,6 +188,7 @@ function App() {
       setNextRestAt(null);
     }
     if (!isLockWindow) {
+      if (localStorage.getItem("filterEnabled") !== "true") return;
       invoke("set_gamma", {
         filterEnabled,
         strength: filterStrength,
@@ -210,8 +211,7 @@ function App() {
   
   useEffect(() => {
     const timer = setInterval(() => {
-      const filterEnabled = localStorage.getItem("filterEnabled") === "true";
-      if (!filterEnabled) return;
+      if (localStorage.getItem("filterEnabled") !== "true") return;
       const filterStrength = localStorage.getItem("filterStrength") || "30";
       const colorTemp = localStorage.getItem("colorTemp") || "4700";
       invoke("set_gamma", {
@@ -226,6 +226,7 @@ function App() {
   useEffect(() => {
     if (isLockWindow) return;
     const reset = () => {
+      if (localStorage.getItem("filterEnabled") !== "true") return;
       invoke("reset_gamma").catch(() => undefined);
     };
     window.addEventListener("beforeunload", reset);
@@ -239,6 +240,7 @@ function App() {
     if (isLockWindow) return;
     let active = true;
     const handle = setTimeout(() => {
+      if (localStorage.getItem("filterEnabled") !== "true") return;
       invoke("set_gamma", {
         filterEnabled,
         strength: filterStrength,
