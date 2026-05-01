@@ -530,12 +530,20 @@ function App() {
     if (!showLockScreen || !restEndAt) return;
     if (now.getTime() >= restEndAt.getTime()) {
       handleExitRest();
-      setRestTimes((times) => {
-        const next = times + 1;
-        const date = new Date().getDate();
-        localStorage.setItem("restTimes", JSON.stringify({date, times: next}));
-        return next;
-      });
+      
+      const restTimes = localStorage.getItem("restTimes");
+      if (restTimes === null) return;
+      const date = new Date().getDate();
+      const obj = JSON.parse((restTimes as string));
+      if (obj.date === date && obj.hours >= 8) {
+        setRestTimes((times) => {
+          const next = times + 1;
+          const date = new Date().getDate();
+          localStorage.setItem("restTimes", JSON.stringify({date, times: next}));
+          return next;
+        });
+      }
+      
     }
   }, [handleExitRest, now, restEndAt, showLockScreen]);
 
