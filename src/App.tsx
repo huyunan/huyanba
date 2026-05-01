@@ -426,17 +426,18 @@ function App() {
     
     const restTimes = localStorage.getItem("restTimes");
       const date = new Date().getDate();
+      const hours = new Date().getHours();
     if (restTimes !== null) {
       const obj = JSON.parse((restTimes as string));
-      if (obj.date === date) {
+      if (obj.date === date && obj.hours >= 8) {
          setRestTimes(Number(obj.times));
       } else {
         setRestTimes(0);
-        localStorage.setItem("restTimes", JSON.stringify({date, times: 0}));
+        localStorage.setItem("restTimes", JSON.stringify({date, times: 0, hours}));
       }
     } else {
       setRestTimes(0);
-      localStorage.setItem("restTimes", JSON.stringify({date, times: 0}));
+      localStorage.setItem("restTimes", JSON.stringify({date, times: 0, hours}));
     }
   }, []);
   
