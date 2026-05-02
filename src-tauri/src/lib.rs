@@ -30,55 +30,6 @@ struct AppState {
 }
 
 const TRAY_ICON: tauri::image::Image<'static> = tauri::include_image!("icons/32x32.png");
-fn default_source_kind() -> String {
-    "legacy".into()
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-enum RestRemoteSource {
-    Palace,
-}
-
-impl Default for RestRemoteSource {
-    fn default() -> Self {
-        Self::Palace
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct RestFile {
-    path: String,
-    added_at: i64,
-    source_url: String,
-    #[serde(default)]
-    last_shown_at: i64,
-    #[serde(default = "default_source_kind")]
-    source_kind: String,
-    #[serde(default)]
-    remote_id: String,
-    #[serde(default)]
-    thumb_url: String,
-    #[serde(default)]
-    author_name: String,
-    #[serde(default)]
-    author_url: String,
-    #[serde(default)]
-    photo_url: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct RestState {
-    files: Vec<RestFile>,
-    next_source_index: usize,
-    next_show_index: usize,
-    last_download_at: i64,
-    last_batch_at: i64,
-    #[serde(default, alias = "preferredSourceUrl")]
-    fixed_source_url: String,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -93,67 +44,6 @@ struct RestStorageSettings {
     current_dir: String,
     default_dir: String,
     is_default: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-struct PalaceStagingState {
-    items: Vec<PalaceStagingEntry>,
-    last_batch_at: i64,
-    current_page: usize,
-    has_prev_page: bool,
-    has_next_page: bool,
-    max_page: usize,
-}
-
-impl Default for PalaceStagingState {
-    fn default() -> Self {
-        Self {
-            items: Vec::new(),
-            last_batch_at: 0,
-            current_page: 1,
-            has_prev_page: false,
-            has_next_page: false,
-            max_page: 1,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct PalaceStagingEntry {
-    id: String,
-    title: String,
-    file_name: String,
-    source_url: String,
-    width: u32,
-    height: u32,
-    credit_name: String,
-    credit_url: String,
-    photo_url: String,
-    added_at: i64,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct PalaceDownloadRequest {
-    id: String,
-    title: String,
-    image_url: String,
-    thumb_url: String,
-    photo_url: String,
-    credit_name: String,
-    credit_url: String,
-    width: u32,
-    height: u32,
-}
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct LockUpdate {
-    time_text: String,
-    date_text: String,
-    rest_countdown: String,
-    allow_esc_exit: bool,
 }
 
 fn clamp(value: f64, min: f64, max: f64) -> f64 {
