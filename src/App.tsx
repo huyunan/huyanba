@@ -179,7 +179,6 @@ function App() {
   const handleExitRest = useCallback(() => {
     invoke("log_app", { message: "前端退出休息" }).catch(() => undefined);
     changeShowLockScreen(false);
-    console.log("showLockScreen_2", localStorage.getItem("showLockScreen"), new Date().getMinutes(), new Date().getSeconds());
     hideLockWindows();
     setRestEndAt(null);
     if (restEnabled) {
@@ -222,19 +221,6 @@ function App() {
     }, 1500);
     return () => clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    if (isLockWindow) return;
-    const reset = () => {
-      if (localStorage.getItem("filterEnabled") !== "true") return;
-      invoke("reset_gamma").catch(() => undefined);
-    };
-    window.addEventListener("beforeunload", reset);
-    return () => {
-      window.removeEventListener("beforeunload", reset);
-      reset();
-    };
-  }, [isLockWindow]);
 
   useEffect(() => {
     if (isLockWindow) return;
@@ -425,8 +411,8 @@ function App() {
     }
     
     const restTimes = localStorage.getItem("restTimes");
-      const date = new Date().getDate();
-      const hours = new Date().getHours();
+    const date = new Date().getDate();
+    const hours = new Date().getHours();
     if (restTimes !== null) {
       const obj = JSON.parse((restTimes as string));
       if (obj.date === date && obj.hours >= 8) {
@@ -530,7 +516,6 @@ function App() {
     if (!showLockScreen || !restEndAt) return;
     if (now.getTime() >= restEndAt.getTime()) {
       handleExitRest();
-      
       const restTimes = localStorage.getItem("restTimes");
       if (restTimes === null) return;
       const date = new Date().getDate();

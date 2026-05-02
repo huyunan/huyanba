@@ -235,11 +235,6 @@ fn set_gamma(filter_enabled: bool, strength: f64, color_temp: f64) -> Result<(),
 }
 
 #[tauri::command]
-fn reset_gamma() -> Result<(), String> {
-    apply_gamma(1.0, 1.0, 1.0)
-}
-
-#[tauri::command]
 async fn show_lock_windows(
     app: tauri::AppHandle,
     state: tauri::State<'_, LockState>,
@@ -660,7 +655,6 @@ pub fn run() {
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             set_gamma,
-            reset_gamma,
             lockscreen_action,
             show_lock_windows,
             hide_lock_windows,
