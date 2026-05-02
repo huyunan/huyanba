@@ -130,7 +130,6 @@ function App() {
     const endAt = restDuraAt();
     setRestEndAt(endAt);
     changeShowLockScreen(true);
-    console.log("showLockScreen_true_2", localStorage.getItem("showLockScreen"), new Date().getMinutes(), new Date().getSeconds());
     showLockWindows();
   }, [restDuration]);
   
@@ -186,22 +185,7 @@ function App() {
     } else {
       setNextRestAt(null);
     }
-    if (!isLockWindow) {
-      if (localStorage.getItem("filterEnabled") !== "true") return;
-      invoke("set_gamma", {
-        filterEnabled,
-        strength: filterStrength,
-        colorTemp,
-      }).catch(() => undefined);
-    }
-  }, [
-    restEnabled,
-    restMinutes,
-    isLockWindow,
-    filterEnabled,
-    filterStrength,
-    colorTemp,
-  ]);
+  }, [restEnabled]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -224,6 +208,7 @@ function App() {
 
   useEffect(() => {
     if (isLockWindow) return;
+    if (isNotificationWindow) return;
     let active = true;
     const handle = setTimeout(() => {
       if (localStorage.getItem("filterEnabled") !== "true") return;
@@ -241,7 +226,7 @@ function App() {
       active = false;
       clearTimeout(handle);
     };
-  }, [isLockWindow, filterEnabled, filterStrength, colorTemp]);
+  }, [isLockWindow, isNotificationWindow, filterEnabled, filterStrength, colorTemp]);
 
   useEffect(() => {
     if (!isLockWindow) return;
@@ -302,7 +287,6 @@ function App() {
       const endAt = restDuraAt();
       setRestEndAt(endAt);
       changeShowLockScreen(true);
-    console.log("showLockScreen_true_1", localStorage.getItem("showLockScreen"), new Date().getMinutes(), new Date().getSeconds());
       showLockWindows();
     }
   }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
