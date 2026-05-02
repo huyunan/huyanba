@@ -278,7 +278,7 @@ function App() {
       return;
     }
     setNextRestAt(restMsAt());
-  }, [showLockScreen, restEnabled, restMinutes]);
+  }, [showLockScreen, restEnabled, restMinutes, restDuration]);
 
   useEffect(() => {
     if (!restEnabled || showLockScreen) return;
@@ -521,7 +521,7 @@ function App() {
     if (!restEnabled || !nextRestAt) return;
     if (now.getTime() < nextRestAt.getTime()) return;
     setNextRestAt(restMsAt());
-  }, [now, showLockScreen, restEnabled, nextRestAt, restMinutes]);
+  }, [now, showLockScreen, restEnabled, nextRestAt, restMinutes, restDuration]);
 
   const nextRestCountdown = restEnabled && nextRestAt
     ? formatDuration((nextRestAt.getTime() - now.getTime()) / 1000)
