@@ -314,8 +314,10 @@ function App() {
   useEffect(() => {
     const startupEnabled = localStorage.getItem("startupEnabled") === "true";
     if (startupEnabled) {
+      enable();
       setStartupEnabled(true);
     } else {
+      disable();
       setStartupEnabled(false);
     }
     localStorage.setItem("startupEnabled", String(startupEnabled));
