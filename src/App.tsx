@@ -558,7 +558,6 @@ function App() {
 
           <header className="topbar">
             <div className="brand">
-              <img className="brand__icon" src="/huyanba.svg" alt="" />
               <div>
                 <p className="brand__name">护眼吧</p>
                 <p className="brand__tag">清醒护眼 · 专注节奏</p>
