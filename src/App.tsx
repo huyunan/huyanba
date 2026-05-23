@@ -51,8 +51,10 @@ function App() {
   const [restMinutes, setRestMinutes] = useState(60);
   // 休息时间
   const [restDuration, setRestDuration] = useState(3);
-  // 休息次数
+  // 今日休息次数
   const [restTimes, setRestTimes] = useState(0);
+  // 昨日休息次数
+  const [preRestTimes, setPreRestTimes] = useState(0);
   // 显示锁屏弹框
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
@@ -397,12 +399,20 @@ function App() {
     }
     
     const restTimes = localStorage.getItem("restTimes");
-    const date = new Date().getDate();
-    const hours = new Date().getHours();
+    const newDate = new Date();
+    const date = newDate.getDate();
+    const hours = newDate.getHours();
+    newDate.setDate(newDate.getDate() - 1);
+    const preDate = newDate.getDate();
+    setPreRestTimes(0);
     if (restTimes !== null) {
       const obj = JSON.parse((restTimes as string));
       if (obj.date === date && obj.hours >= 8) {
-         setRestTimes(Number(obj.times));
+        setRestTimes(Number(obj.times));
+      } else if (obj.date === preDate) {
+        setPreRestTimes(Number(obj.times));
+        setRestTimes(0);
+        localStorage.setItem("restTimes", JSON.stringify({date, times: 0, hours}));
       } else {
         setRestTimes(0);
         localStorage.setItem("restTimes", JSON.stringify({date, times: 0, hours}));
@@ -514,7 +524,6 @@ function App() {
           return next;
         });
       }
-      
     }
   }, [handleExitRest, now, restEndAt, showLockScreen]);
 
@@ -572,6 +581,10 @@ function App() {
                   <div>
                     <p className="stat__label">今日休息次数</p>
                     <p className="stat__value">{restTimes} 次</p>
+                  </div>
+                  <div>
+                    <p className="stat__label">昨日休息次数</p>
+                    <p className="stat__value">{preRestTimes} 次</p>
                   </div>
                   <div>
                     <p className="stat__label">下一次休息</p>
