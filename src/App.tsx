@@ -403,22 +403,19 @@ function App() {
     const date = newDate.getDate();
     newDate.setDate(newDate.getDate() - 1);
     const preDate = newDate.getDate();
-    setPreRestTimes(0);
     if (restTimes !== null) {
       const obj = JSON.parse((restTimes as string));
-      if (obj.date === date) {
-        setRestTimes(Number(obj.times));
-      } else if (obj.date === preDate) {
-        setPreRestTimes(Number(obj.times));
-        setRestTimes(0);
-        localStorage.setItem("restTimes", JSON.stringify({date, times: 0}));
-      } else {
-        setRestTimes(0);
-        localStorage.setItem("restTimes", JSON.stringify({date, times: 0}));
+      if (!obj[date]) {
+        obj[date] = {times: 0};
       }
+      if (!obj[preDate]) {
+        obj[preDate] = {times: 0};
+      }
+      setRestTimes(Number(obj[date].times));
+      setPreRestTimes(Number(obj[preDate].times));
+      localStorage.setItem("restTimes", JSON.stringify(obj));
     } else {
-      setRestTimes(0);
-      localStorage.setItem("restTimes", JSON.stringify({date, times: 0}));
+      localStorage.setItem("restTimes", JSON.stringify({[date]: {times: 0}, [preDate]: {times: 0}}));
     }
   }, []);
   
@@ -516,13 +513,12 @@ function App() {
       const newDate = new Date();
       const date = newDate.getDate();
       const hours = newDate.getHours();
-      // newDate.setDate(newDate.getDate() - 1);
-      // const preDate = newDate.getDate();
       const obj = JSON.parse((restTimes as string));
-      if (obj.date === date && hours >= 8) {
+      if (hours >= 8) {
         setRestTimes((times) => {
           const next = times + 1;
-          localStorage.setItem("restTimes", JSON.stringify({date, times: next}));
+          obj[date] = {times: next};
+          localStorage.setItem("restTimes", JSON.stringify(obj));
           return next;
         });
       }
