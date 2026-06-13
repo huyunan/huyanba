@@ -7,7 +7,27 @@ import {
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { enable, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
+import {
+  start,
+  onLock
+} from 'tauri-plugin-idlemonitor-api';
 import "./App.css";
+
+async function setupIdleMonitoring() {
+  await start({ idleThresholdSecs: 10 })
+  await onLock((payload) => {
+    if (payload.locked) {
+      // pauseTimer("Locked")
+      console.log('⏸ Screen LOCKED — timer paused')
+    } else {
+      // startTimer()
+      console.log('▶ Screen UNLOCKED — timer resumed')
+    }
+  })
+}
+window.addEventListener("DOMContentLoaded", () => {
+  setupIdleMonitoring()
+})
 
 function pad2(value: number) {
   return value.toString().padStart(2, "0");

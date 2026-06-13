@@ -405,6 +405,7 @@ pub fn run() {
             MacosLauncher::LaunchAgent,
             Some(vec!["--flag1", "--flag2"]),
         ))
+        .plugin(tauri_plugin_idlemonitor::init()) // 注册idle插件
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
