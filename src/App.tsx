@@ -28,6 +28,8 @@ function formatDuration2(totalSeconds: number) {
   const seconds = clamped % 60;
   return `${pad2(minutes)}:${pad2(seconds)}`;
 }
+// windows系统锁屏的时间
+let windowsLockedTime = 0;
 
 function App() {
   const isLockWindow =
@@ -73,6 +75,8 @@ function App() {
   const [lockEndAtMs, setLockEndAtMs] = useState<number | null>(null);
   // windows系统锁屏状态
   const [windowsLocked, setWindowsLocked] = useState(false);
+  // windows系统锁屏的时间
+  // let windowsLockedTime = 0;
 
   const presets = useMemo(
     () => ({
@@ -158,13 +162,9 @@ function App() {
       await onLock((payload) => {
         if (showLockScreen) return;
         if (payload.locked) {
-          // pauseTimer("Locked")
           setWindowsLocked(true);
-          console.log('⏸ Screen LOCKED — timer paused')
         } else {
-          // startTimer()
           setWindowsLocked(false);
-          console.log('▶ Screen UNLOCKED — timer resumed')
         }
       })
     }
@@ -212,9 +212,42 @@ function App() {
   }, [restEnabled]);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
+    if (!restEnabled) return;
+    if (showLockScreen) return;
+    let timer = undefined;
+    if (windowsLocked) {
+      windowsLockedTime = 0;
+      console.log("setNow init", windowsLockedTime);
+      timer = setInterval(() => {
+        windowsLockedTime += 1000;
+        console.log("setNow", windowsLockedTime);
+      }, 1000);
+    } else {
+      clearInterval(timer);
+      console.log("nextMinutesAt时间", windowsLockedTime);
+      if (windowsLockedTime === 0) return;
+      const minutesAtTmp = windowsLockedTime
+      setNextMinutesAt((at: Date | null) => {
+      console.log("at ", minutesAtTmp);
+        if (at) {
+          return new Date(at.getTime() + minutesAtTmp)
+        }
+        return null;
+      });
+      windowsLockedTime = 0;
+    }
     return () => clearInterval(timer);
-  }, []);
+  }, [restEnabled, showLockScreen, windowsLocked]);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (restEnabled && !showLockScreen && windowsLocked) {
+      } else {
+        setNow(new Date());
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [windowsLocked, windowsLockedTime, nextMinutesAt, setNextMinutesAt]);
   
   useEffect(() => {
     const timer = setInterval(() => {
