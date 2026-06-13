@@ -2,7 +2,7 @@
 name = "huyanba"
 version = "3.5.6"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["huyunan"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -29,6 +29,7 @@ image = "0.25"
 rand = "0.8"
 regex = "1"
 chrono = "0.4"
+tauri-plugin-idlemonitor = "0.2.3"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
