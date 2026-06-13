@@ -308,8 +308,7 @@ function App() {
     if (!restEnabled || showLockScreen) return;
     if (!nextMinutesAt) return;
     if (now.getTime() >= nextMinutesAt.getTime()) {
-      const endAt = restDuraAt();
-      setEndDurationAt(endAt);
+      setEndDurationAt(restDuraAt());
       changeShowLockScreen(true);
       showLockWindows();
     }
@@ -551,8 +550,9 @@ function App() {
   useEffect(() => {
     if (showLockScreen) return;
     if (!restEnabled || !nextMinutesAt) return;
-    if (now.getTime() < nextMinutesAt.getTime()) return;
-    setNextMinutesAt(restMsAt());
+    if (now.getTime() >= nextMinutesAt.getTime()) {
+      setNextMinutesAt(restMsAt());
+    }
   }, [now, showLockScreen, restEnabled, nextMinutesAt, restMinutes, restDuration]);
 
   const nextRestCountdown = restEnabled && nextMinutesAt
