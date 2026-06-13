@@ -7,24 +7,8 @@ import {
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { enable, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
-import { start, onLock } from 'tauri-plugin-idlemonitor-api';
+import { onLock } from 'tauri-plugin-idlemonitor-api';
 import "./App.css";
-
-async function setupIdleMonitoring() {
-  await start({ idleThresholdSecs: 10 })
-  await onLock((payload) => {
-    if (payload.locked) {
-      // pauseTimer("Locked")
-      console.log('⏸ Screen LOCKED — timer paused')
-    } else {
-      // startTimer()
-      console.log('▶ Screen UNLOCKED — timer resumed')
-    }
-  })
-}
-window.addEventListener("DOMContentLoaded", () => {
-  setupIdleMonitoring()
-})
 
 function pad2(value: number) {
   return value.toString().padStart(2, "0");
@@ -75,9 +59,10 @@ function App() {
   // 显示锁屏弹框
   const [showLockScreen, setShowLockScreen] = useState(false);
   const [activePreset, setActivePreset] = useState("智能");
-  const [nextRestAt, setNextRestAt] = useState<Date | null>(null);
+  // 下一次休息时间
+  const [nextMinutesAt, setNextMinutesAt] = useState<Date | null>(null);
   // 休息结束时间（未弹出锁屏窗口前）
-  const [restEndAt, setRestEndAt] = useState<Date | null>(null);
+  const [endDurationAt, setEndDurationAt] = useState<Date | null>(null);
   // 锁屏数据
   const [lockPayload, setLockPayload] = useState({
     timeText: "--:--",
@@ -86,6 +71,8 @@ function App() {
   });
   // 休息结束时间（已弹出锁屏窗口）
   const [lockEndAtMs, setLockEndAtMs] = useState<number | null>(null);
+  // windows系统锁屏状态
+  const [windowsLocked, setWindowsLocked] = useState(false);
 
   const presets = useMemo(
     () => ({
@@ -146,16 +133,15 @@ function App() {
   const handleStartRest = useCallback(() => {
     if (localStorage.getItem("restEnabled") !== "true") return;
     if (isNotificationWindow) return;
-    const endAt = restDuraAt();
-    setRestEndAt(endAt);
+    setEndDurationAt(restDuraAt());
     changeShowLockScreen(true);
     showLockWindows();
   }, [restDuration]);
   
   const showLockWindows = () => {
-    const endAt = restEndAt ?? restDuraAt();
+    const endDuraAt = endDurationAt ?? restDuraAt();
     invoke("show_lock_windows", {
-      endAtMs: endAt.getTime(),
+      endAtMs: endDuraAt.getTime(),
     }).catch((error) => console.error("锁屏窗口创建失败", error));
   }
   
@@ -167,8 +153,27 @@ function App() {
   }
   
   useEffect(() => {
+    const setupIdleMonitoring = async () => {
+      // await start({ idleThresholdSecs: 10 })
+      await onLock((payload) => {
+        if (showLockScreen) return;
+        if (payload.locked) {
+          // pauseTimer("Locked")
+          setWindowsLocked(true);
+          console.log('⏸ Screen LOCKED — timer paused')
+        } else {
+          // startTimer()
+          setWindowsLocked(false);
+          console.log('▶ Screen UNLOCKED — timer resumed')
+        }
+      })
+    }
+    setupIdleMonitoring()
+  }, [showLockScreen]);
+  
+  useEffect(() => {
     if (!showLockScreen) return;
-    setRestEndAt(restDuraAt());
+    setEndDurationAt(restDuraAt());
   }, [restDuration, showLockScreen]);
 
   useEffect(() => {
@@ -198,11 +203,11 @@ function App() {
     invoke("log_app", { message: "前端退出休息" }).catch(() => undefined);
     changeShowLockScreen(false);
     hideLockWindows();
-    setRestEndAt(null);
+    setEndDurationAt(null);
     if (restEnabled) {
-      setNextRestAt(restMsAt());
+      setNextMinutesAt(restMsAt());
     } else {
-      setNextRestAt(null);
+      setNextMinutesAt(null);
     }
   }, [restEnabled]);
 
@@ -293,22 +298,22 @@ function App() {
   useEffect(() => {
     if (showLockScreen) return;
     if (!restEnabled) {
-      setNextRestAt(null);
+      setNextMinutesAt(null);
       return;
     }
-    setNextRestAt(restMsAt());
+    setNextMinutesAt(restMsAt());
   }, [showLockScreen, restEnabled, restMinutes, restDuration]);
 
   useEffect(() => {
     if (!restEnabled || showLockScreen) return;
-    if (!nextRestAt) return;
-    if (now.getTime() >= nextRestAt.getTime()) {
+    if (!nextMinutesAt) return;
+    if (now.getTime() >= nextMinutesAt.getTime()) {
       const endAt = restDuraAt();
-      setRestEndAt(endAt);
+      setEndDurationAt(endAt);
       changeShowLockScreen(true);
       showLockWindows();
     }
-  }, [now, restEnabled, nextRestAt, restDuration, showLockScreen]);
+  }, [now, restEnabled, nextMinutesAt, restDuration, showLockScreen]);
   
   const registerKey = () => {
     if (localStorage.getItem("autoKeyEnabled") !== "true") return;
@@ -523,8 +528,8 @@ function App() {
   }
   
   useEffect(() => {
-    if (!showLockScreen || !restEndAt) return;
-    if (now.getTime() >= restEndAt.getTime()) {
+    if (!showLockScreen || !endDurationAt) return;
+    if (now.getTime() >= endDurationAt.getTime()) {
       handleExitRest();
       const restTimes = localStorage.getItem("restTimes");
       if (restTimes === null) return;
@@ -541,17 +546,17 @@ function App() {
         });
       }
     }
-  }, [handleExitRest, now, restEndAt, showLockScreen]);
+  }, [handleExitRest, now, endDurationAt, showLockScreen]);
 
   useEffect(() => {
     if (showLockScreen) return;
-    if (!restEnabled || !nextRestAt) return;
-    if (now.getTime() < nextRestAt.getTime()) return;
-    setNextRestAt(restMsAt());
-  }, [now, showLockScreen, restEnabled, nextRestAt, restMinutes, restDuration]);
+    if (!restEnabled || !nextMinutesAt) return;
+    if (now.getTime() < nextMinutesAt.getTime()) return;
+    setNextMinutesAt(restMsAt());
+  }, [now, showLockScreen, restEnabled, nextMinutesAt, restMinutes, restDuration]);
 
-  const nextRestCountdown = restEnabled && nextRestAt
-    ? formatDuration((nextRestAt.getTime() - now.getTime()) / 1000)
+  const nextRestCountdown = restEnabled && nextMinutesAt
+    ? formatDuration((nextMinutesAt.getTime() - now.getTime()) / 1000)
     : "已暂停";
 
   const timeText = now.toLocaleTimeString("zh-CN", {
