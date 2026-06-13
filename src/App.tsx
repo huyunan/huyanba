@@ -7,10 +7,7 @@ import {
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { enable, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
-import {
-  start,
-  onLock
-} from 'tauri-plugin-idlemonitor-api';
+import { start, onLock } from 'tauri-plugin-idlemonitor-api';
 import "./App.css";
 
 async function setupIdleMonitoring() {
