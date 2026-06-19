@@ -156,7 +156,6 @@ function App() {
     const setupIdleMonitoring = async () => {
       // await start({ idleThresholdSecs: 10 })
       await onLock((payload) => {
-        if (showLockScreen) return;
         if (payload.locked) {
           setWindowsLocked(true);
         } else {
@@ -165,7 +164,7 @@ function App() {
       })
     }
     setupIdleMonitoring()
-  }, [showLockScreen]);
+  }, []);
   
   useEffect(() => {
     if (!showLockScreen) return;
@@ -312,13 +311,13 @@ function App() {
 
   useEffect(() => {
     if (!restEnabled || showLockScreen) return;
-    if (!nextMinutesAt) return;
+    if (!nextMinutesAt || windowsLocked) return;
     if (now.getTime() >= nextMinutesAt.getTime()) {
       setEndDurationAt(restDuraAt());
       changeShowLockScreen(true);
       showLockWindows();
     }
-  }, [now, restEnabled, nextMinutesAt, restDuration, showLockScreen]);
+  }, [now, restEnabled, nextMinutesAt, restDuration, showLockScreen, windowsLocked]);
   
   const registerKey = () => {
     if (localStorage.getItem("autoKeyEnabled") !== "true") return;
@@ -542,6 +541,10 @@ function App() {
       const date = newDate.getDate();
       const hours = newDate.getHours();
       const obj = JSON.parse((restTimes as string));
+      if (!obj[date]) {
+        obj[date] = {times: 0};
+        setRestTimes(0);
+      }
       if (hours >= 8) {
         setRestTimes((times) => {
           const next = times + 1;
