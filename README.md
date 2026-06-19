@@ -19,7 +19,7 @@
 ![锁屏](docs/images/notification2.png)
 
 ## 版本
-- 当前打包版本：`4.0.6`
+- 当前打包版本：`4.2.6`
 
 ## 安装包位置（本机）
 ```
@@ -27,7 +27,7 @@ huyanba\src-tauri\target\release\bundle\nsis
 ```
 
 ## 下载
-https://github.com/huyunan/huyanba/releases/tag/v4.0.6
+https://github.com/huyunan/huyanba/releases/tag/v4.2.6
 
 ## 本地开发
 ```
