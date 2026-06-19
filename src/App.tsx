@@ -152,19 +152,34 @@ function App() {
     );
   }
   
+  const checkTime = (restTimes: number) => {
+    if (restTimes === 0) return;
+    const localTimes = localStorage.getItem("restTimes");
+    if (localTimes !== null) {
+      const date = new Date().getDate();
+      const obj = JSON.parse((localTimes as string));
+      if (!obj[date]) {
+        obj[date] = {times: 0};
+        setRestTimes(0);
+      }
+    }
+  }
+    
   useEffect(() => {
+    let unlisten: (() => void) | undefined;
     const setupIdleMonitoring = async () => {
-      // await start({ idleThresholdSecs: 10 })
-      await onLock((payload) => {
+      unlisten = await onLock((payload) => {
         if (payload.locked) {
           setWindowsLocked(true);
+          checkTime(restTimes);
         } else {
           setWindowsLocked(false);
         }
       })
     }
     setupIdleMonitoring()
-  }, []);
+    return () => unlisten && unlisten();
+  }, [restTimes]);
   
   useEffect(() => {
     if (!showLockScreen) return;
@@ -537,22 +552,18 @@ function App() {
       handleExitRest();
       const restTimes = localStorage.getItem("restTimes");
       if (restTimes === null) return;
-      const newDate = new Date();
-      const date = newDate.getDate();
-      const hours = newDate.getHours();
+      const date = new Date().getDate();
       const obj = JSON.parse((restTimes as string));
       if (!obj[date]) {
         obj[date] = {times: 0};
         setRestTimes(0);
       }
-      if (hours >= 8) {
-        setRestTimes((times) => {
-          const next = times + 1;
-          obj[date] = {times: next};
-          localStorage.setItem("restTimes", JSON.stringify(obj));
-          return next;
-        });
-      }
+      setRestTimes((times) => {
+        const next = times + 1;
+        obj[date] = {times: next};
+        localStorage.setItem("restTimes", JSON.stringify(obj));
+        return next;
+      });
     }
   }, [handleExitRest, now, endDurationAt, showLockScreen]);
 
