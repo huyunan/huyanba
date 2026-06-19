@@ -19,6 +19,7 @@ use tauri_plugin_autostart::MacosLauncher;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::Graphics::Gdi::{GetDC, ReleaseDC};
 use windows::Win32::UI::ColorSystem::SetDeviceGammaRamp;
+use windows::Win32::UI::ColorSystem::GetDeviceGammaRamp;
 
 #[derive(Default)]
 struct LockState {
@@ -100,6 +101,65 @@ fn apply_gamma(mult_r: f64, mult_g: f64, mult_b: f64) -> Result<(), String> {
             return Err("设置色温失败".into());
         }
     }
+    Ok(())
+}
+
+#[repr(C)]
+struct GammaRamp {
+    red: [u16; 256],
+    green: [u16; 256],
+    blue: [u16; 256],
+}
+
+fn is_eye_protection_off(ramp: &GammaRamp) -> bool {
+    // 标准伽马 ramp 应该是线性的（近似）
+    // 检查 R、G、B 通道是否大致一致且呈线性增长
+    let mut is_linear = true;
+    
+    // 检查关键点的线性度
+    for i in (0..256).step_by(32) {
+        let expected = (i * 65535 / 255) as u16;
+        let tolerance = 1000; // 允许的误差范围
+        
+        if (ramp.red[i] as i32 - expected as i32).abs() > tolerance ||
+           (ramp.green[i] as i32 - expected as i32).abs() > tolerance ||
+           (ramp.blue[i] as i32 - expected as i32).abs() > tolerance {
+            is_linear = false;
+            break;
+        }
+    }
+    
+    // 检查 RGB 通道是否平衡（护眼模式通常会降低蓝色通道）
+    let mid = 128;
+    let red_mid = ramp.red[mid];
+    let green_mid = ramp.green[mid];
+    let blue_mid = ramp.blue[mid];
+    
+    let rgb_balance = (red_mid as i32 - green_mid as i32).abs() < 500 &&
+                      (green_mid as i32 - blue_mid as i32).abs() < 500;
+    
+    is_linear && rgb_balance
+}
+
+#[tauri::command]
+fn get_gamma(filter_enabled: bool, strength: f64, color_temp: f64) -> Result<(), String> {
+    let mut ramp: GammaRamp = unsafe { std::mem::zeroed() };
+
+    unsafe {
+        let hdc = GetDC(HWND(0));
+        if hdc.0 == 0 {
+            return Err("无法获取显示设备句柄".into());
+        }
+        let ok = GetDeviceGammaRamp(hdc, &mut ramp as *mut _ as *mut _).as_bool();
+        ReleaseDC(HWND(0), hdc);
+        if !ok {
+            return Err("获取色温失败".into());
+        }
+        if is_eye_protection_off(&ramp) {
+            let _sg = set_gamma(filter_enabled, strength, color_temp);
+        }
+    }
+    // let ramp_string = format!("{:?}", ramp);
     Ok(())
 }
 
@@ -545,6 +605,7 @@ pub fn run() {
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             set_gamma,
+            get_gamma,
             lockscreen_action,
             show_lock_windows,
             hide_lock_windows,

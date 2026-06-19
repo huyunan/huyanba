@@ -241,12 +241,12 @@ function App() {
       if (localStorage.getItem("filterEnabled") !== "true") return;
       const filterStrength = localStorage.getItem("filterStrength") || "30";
       const colorTemp = localStorage.getItem("colorTemp") || "4700";
-      invoke("set_gamma", {
+      invoke("get_gamma", {
         filterEnabled,
         strength: Number(filterStrength),
         colorTemp: Number(colorTemp),
       }).catch(() => undefined);
-    }, 1500);
+    }, 15000);
     return () => clearInterval(timer);
   }, []);
 
