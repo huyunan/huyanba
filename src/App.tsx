@@ -241,7 +241,21 @@ function App() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setNow(new Date());
+      setNow((now: Date) => {
+        // 休眠时间判断
+        const date = new Date()
+        const diff = date.getTime() - now.getTime();
+        if (diff >= 600000) {
+          // now 如果超过 10 分钟没有更新，判定为休眠状态
+          setNextMinutesAt((at: Date | null) => {
+            if (at) {
+              return new Date(at.getTime() + diff)
+            }
+            return null;
+          });
+        }
+        return date
+      });
       if (restEnabled && !showLockScreen && windowsLocked) {
         setNextMinutesAt((at: Date | null) => {
           if (at) {
@@ -252,7 +266,7 @@ function App() {
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [windowsLocked, restEnabled, showLockScreen, setNextMinutesAt]);
+  }, [windowsLocked, restEnabled, showLockScreen, setNextMinutesAt, setNow]);
   
   useEffect(() => {
     const timer = setInterval(() => {
