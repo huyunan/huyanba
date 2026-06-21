@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { TauriEvent } from '@tauri-apps/api/event'
 import { enable, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
 import { onLock } from 'tauri-plugin-idlemonitor-api';
@@ -151,6 +152,23 @@ function App() {
       console.error("锁屏窗口关闭失败", error)
     );
   }
+  
+  useEffect(() => {
+    let unlistenFocus: () => void
+    const bindEvent = async () => {
+      const appWebview = getCurrentWebviewWindow()
+      // 进入前台
+      unlistenFocus = await appWebview.listen(TauriEvent.WINDOW_FOCUS, () => {
+        checkTime(restTimes);
+      })
+    }
+
+    bindEvent()
+
+    return () => {
+      unlistenFocus?.()
+    }
+  }, [])
   
   const checkTime = (restTimes: number) => {
     if (restTimes === 0) return;
