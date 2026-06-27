@@ -189,9 +189,9 @@ function App() {
       unlisten = await onLock((payload) => {
         if (payload.locked) {
           setWindowsLocked(true);
-          checkTime(restTimes);
         } else {
           setWindowsLocked(false);
+          checkTime(restTimes);
         }
       })
     }
