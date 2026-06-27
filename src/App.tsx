@@ -174,11 +174,18 @@ function App() {
     if (restTimes === 0) return;
     const localTimes = localStorage.getItem("restTimes");
     if (localTimes !== null) {
-      const date = new Date().getDate();
+      const newDate = new Date();
+      const date = newDate.getDate();
+      newDate.setDate(newDate.getDate() - 1);
+      const preDate = newDate.getDate();
       const obj = JSON.parse((localTimes as string));
       if (!obj[date]) {
         obj[date] = {times: 0};
         setRestTimes(0);
+      }
+      if (!obj[preDate]) {
+        obj[preDate] = {times: 0};
+        setPreRestTimes(0);
       }
     }
   }
@@ -584,11 +591,18 @@ function App() {
       handleExitRest();
       const restTimes = localStorage.getItem("restTimes");
       if (restTimes === null) return;
-      const date = new Date().getDate();
+      const newDate = new Date();
+      const date = newDate.getDate();
+      newDate.setDate(newDate.getDate() - 1);
+      const preDate = newDate.getDate();
       const obj = JSON.parse((restTimes as string));
       if (!obj[date]) {
         obj[date] = {times: 0};
         setRestTimes(0);
+      }
+      if (!obj[preDate]) {
+        obj[preDate] = {times: 0};
+        setPreRestTimes(0);
       }
       setRestTimes((times) => {
         const next = times + 1;
