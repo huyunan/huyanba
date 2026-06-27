@@ -236,6 +236,7 @@ function App() {
   
   const handleExitRest = useCallback(() => {
     invoke("log_app", { message: "前端退出休息" }).catch(() => undefined);
+    console.log("前端退出休息 ", new Date().toLocaleString());
     changeShowLockScreen(false);
     hideLockWindows();
     setEndDurationAt(null);
