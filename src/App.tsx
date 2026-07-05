@@ -173,22 +173,25 @@ function App() {
   const checkTime = (restTimes: number) => {
     if (restTimes === 0) return;
     const localTimes = localStorage.getItem("restTimes");
+    const newDate = new Date();
+    const date = newDate.getDate();
+    newDate.setDate(newDate.getDate() - 1);
+    const preDate = newDate.getDate();
+    let obj = {[date]: {times: 0}, [preDate]: {times: 0}};
     if (localTimes !== null) {
-      const newDate = new Date();
-      const date = newDate.getDate();
-      newDate.setDate(newDate.getDate() - 1);
-      const preDate = newDate.getDate();
-      const obj = JSON.parse((localTimes as string));
-      if (!obj[date]) {
-        obj[date] = {times: 0};
-        setRestTimes(0);
+      const obj2 = JSON.parse((localTimes as string));
+      if (!obj2[date]) {
+        obj2[date] = {times: 0};
       }
-      if (!obj[preDate]) {
-        obj[preDate] = {times: 0};
-        setPreRestTimes(0);
+      if (!obj2[preDate]) {
+        obj2[preDate] = {times: 0};
       }
-      localStorage.setItem("restTimes", JSON.stringify(obj));
+      setRestTimes(Number(obj2[date].times));
+      setPreRestTimes(Number(obj2[preDate].times));
+      obj[date] = obj2[date];
+      obj[preDate] = obj2[preDate];
     }
+    localStorage.setItem("restTimes", JSON.stringify(obj));
   }
     
   useEffect(() => {
