@@ -168,7 +168,7 @@ function App() {
     return () => {
       unlistenFocus?.()
     }
-  }, [])
+  }, [restTimes])
   
   const checkTime = (restTimes: number) => {
     if (restTimes === 0) return;
@@ -187,6 +187,7 @@ function App() {
         obj[preDate] = {times: 0};
         setPreRestTimes(0);
       }
+      localStorage.setItem("restTimes", JSON.stringify(obj));
     }
   }
     
@@ -612,7 +613,7 @@ function App() {
         return next;
       });
     }
-  }, [handleExitRest, now, endDurationAt, showLockScreen]);
+  }, [handleExitRest, now, endDurationAt, showLockScreen, setPreRestTimes, setRestTimes]);
 
   useEffect(() => {
     if (showLockScreen) return;
