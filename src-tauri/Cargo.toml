@@ -1,6 +1,6 @@
 [package]
 name = "huyanba"
-version = "4.6.6"
+version = "4.7.8"
 description = "A Tauri App"
 authors = ["huyunan"]
 edition = "2021"
