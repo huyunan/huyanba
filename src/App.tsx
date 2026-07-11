@@ -42,7 +42,7 @@ function App() {
   const [startupEnabled, setStartupEnabled] = useState(false);
   // 休息节奏开关
   const [restEnabled, setRestEnabled] = useState(true);
-  // 定时休息快捷键
+  // 暂停休息快捷键
   const [autoKeyEnabled, setAutoKeyEnabled] = useState(true);
   const [autoKeyMsg, setAutoKeyMsg] = useState("");
   // 强度
@@ -839,7 +839,7 @@ function App() {
                   </label>
 
                   <label className="setting-row">
-                    <span>定时休息快捷键（Alt + Shift + 1）</span>
+                    <span>暂停休息快捷键（Alt + Shift + 2）</span>
                     <label className="toggle">
                       <input
                         type="checkbox"

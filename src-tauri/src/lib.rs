@@ -469,14 +469,14 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
-            let shift_1_shortcut = Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::Digit1);
+            let shift_2_shortcut = Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::Digit2);
             let app_handle = app.handle();
             app_handle.plugin(
                 tauri_plugin_global_shortcut::Builder::new().with_handler({
                     let app_handle = app_handle.clone();
-                    let shift_1_shortcut = shift_1_shortcut.clone();
+                    let shift_2_shortcut = shift_2_shortcut.clone();
                     move |_app, shortcut, event| {
-                        if shortcut == &shift_1_shortcut {
+                        if shortcut == &shift_2_shortcut {
                             match event.state() {
                                 ShortcutState::Pressed => {
                                     let mut window_main = None;
@@ -501,7 +501,7 @@ pub fn run() {
                 })
                 .build(),
             )?;
-            app.global_shortcut().register(shift_1_shortcut)?;
+            app.global_shortcut().register(shift_2_shortcut)?;
                 
             let dir = ensure_dir(app.handle())?;
             allow_dir_on_scope(app.handle(), &dir)?;
