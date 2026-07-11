@@ -697,7 +697,6 @@ function App() {
                     <input
                       type="checkbox"
                       checked={filterEnabled}
-                      onChange={() => {}}
                       onClick={() => changeFilterEnabled(!filterEnabled)}
                     />
                     <span className="toggle__track" />
@@ -762,7 +761,6 @@ function App() {
                     <input
                       type="checkbox"
                       checked={restEnabled}
-                      onChange={() => {}}
                       onClick={() => changeRestEnabled(!restEnabled)}
                     />
                     <span className="toggle__track" />
@@ -834,7 +832,6 @@ function App() {
                       <input
                         type="checkbox"
                         checked={filterEnabled}
-                        onChange={() => {}}
                         onClick={() => changeFilterEnabled(!filterEnabled)}
                       />
                       <span className="toggle__track" />
@@ -847,7 +844,6 @@ function App() {
                       <input
                         type="checkbox"
                         checked={autoKeyEnabled}
-                        onChange={() => {}}
                         onClick={() => changeAutoKeyEnabled(!autoKeyEnabled)}
                       />
                       <span className="toggle__track" />
@@ -860,7 +856,6 @@ function App() {
                       <input
                         type="checkbox"
                         checked={startupEnabled}
-                        onChange={() => {}}
                         onClick={() => changeStartupEnabled(!startupEnabled)}
                       />
                       <span className="toggle__track" />
