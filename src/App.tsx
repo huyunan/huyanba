@@ -40,6 +40,8 @@ function App() {
   const [filterEnabled, setFilterEnabled] = useState(true);
   // 开机自启
   const [startupEnabled, setStartupEnabled] = useState(false);
+  // 护眼轮循
+  const [cycleEnabled, setCycleEnabled] = useState(true);
   // 休息节奏开关
   const [restEnabled, setRestEnabled] = useState(true);
   // 暂停休息快捷键
@@ -283,6 +285,7 @@ function App() {
   useEffect(() => {
     const timer = setInterval(() => {
       if (localStorage.getItem("filterEnabled") !== "true") return;
+      if (localStorage.getItem("cycleEnabled") !== "true") return;
       const filterStrength = localStorage.getItem("filterStrength") || "30";
       const colorTemp = localStorage.getItem("colorTemp") || "4700";
       invoke("get_gamma", {
@@ -409,6 +412,14 @@ function App() {
     }
     localStorage.setItem("startupEnabled", String(startupEnabled));
     
+    const cycleEnabled = localStorage.getItem("cycleEnabled") === "true";
+    if (cycleEnabled) {
+      setCycleEnabled(true);
+    } else {
+      setCycleEnabled(false);
+    }
+    localStorage.setItem("cycleEnabled", String(cycleEnabled));
+    
     const filterEnabled = localStorage.getItem("filterEnabled");
     if (filterEnabled === null || filterEnabled === "true") {
       setFilterEnabled(true);
@@ -514,6 +525,16 @@ function App() {
         disable();
         setStartupEnabled(false);
         localStorage.setItem("startupEnabled", "false");
+      }
+  }
+  
+  const changeCycleEnabled = async (val: boolean) => {
+      if (val) {
+        setCycleEnabled(true);
+        localStorage.setItem("cycleEnabled", "true");
+      } else {
+        setCycleEnabled(false);
+        localStorage.setItem("cycleEnabled", "false");
       }
   }
   
@@ -697,7 +718,7 @@ function App() {
                     <input
                       type="checkbox"
                       checked={filterEnabled}
-                      onClick={() => changeFilterEnabled(!filterEnabled)}
+                      onChange={() => changeFilterEnabled(!filterEnabled)}
                     />
                     <span className="toggle__track" />
                   </label>
@@ -857,6 +878,18 @@ function App() {
                         type="checkbox"
                         checked={startupEnabled}
                         onClick={() => changeStartupEnabled(!startupEnabled)}
+                      />
+                      <span className="toggle__track" />
+                    </label>
+                  </label>
+
+                  <label className="setting-row">
+                    <span>护眼轮循</span>
+                    <label className="toggle">
+                      <input
+                        type="checkbox"
+                        checked={cycleEnabled}
+                        onClick={() => changeCycleEnabled(!cycleEnabled)}
                       />
                       <span className="toggle__track" />
                     </label>
