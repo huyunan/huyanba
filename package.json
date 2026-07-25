@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "debug": "tsc && vite build --sourcemap --minify false",
     "preview": "vite preview",
     "tauri": "tauri"
   },
