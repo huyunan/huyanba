@@ -149,7 +149,6 @@ function App() {
   }
   
   const hideLockWindows = () => {
-    invoke("log_app", { message: "前端请求关闭锁屏" }).catch(() => undefined);
     invoke("hide_lock_windows").catch((error) =>
       console.error("锁屏窗口关闭失败", error)
     );
@@ -241,8 +240,6 @@ function App() {
   }, []);
   
   const handleExitRest = useCallback(() => {
-    invoke("log_app", { message: "前端退出休息" }).catch(() => undefined);
-    console.log("前端退出休息 ", new Date().toLocaleString());
     changeShowLockScreen(false);
     hideLockWindows();
     setEndDurationAt(null);

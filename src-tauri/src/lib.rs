@@ -2,7 +2,6 @@ use chrono::{DateTime, FixedOffset, Utc};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -204,7 +203,6 @@ async fn show_lock_windows(
     }
 
     let monitors = app.available_monitors().map_err(|err| err.to_string())?;
-    append_app_log(&app, &format!("锁屏创建开始 monitors={}", monitors.len()));
     for (index, monitor) in monitors.into_iter().enumerate() {
         let label = format!("lockscreen-{}", index);
         let position = monitor.position();
@@ -232,15 +230,6 @@ async fn show_lock_windows(
         let _ = window.set_focus();
         labels.push(label);
     }
-
-    append_app_log(
-        &app,
-        &format!(
-            "锁屏创建完成 labels={} elapsed_ms={}",
-            labels.len(),
-            start.elapsed().as_millis()
-        ),
-    );
     Ok(())
 }
 
@@ -251,7 +240,6 @@ fn hide_lock_windows(
 ) -> Result<(), String> {
     let start = Instant::now();
     let mut labels = state.labels.lock().map_err(|_| "锁状态被占用")?;
-    append_app_log(&app, &format!("锁屏关闭开始 labels={}", labels.len()));
     for label in labels.iter() {
         if !label.as_str().starts_with("lockscreen-") {
             continue;
@@ -261,10 +249,6 @@ fn hide_lock_windows(
         }
     }
     labels.clear();
-    append_app_log(
-        &app,
-        &format!("锁屏关闭完成 {}ms", start.elapsed().as_millis()),
-    );
     Ok(())
 }
 
@@ -288,7 +272,6 @@ async fn show_notification_windows(
     }
 
     let monitors = app.available_monitors().map_err(|err| err.to_string())?;
-    append_app_log(&app, &format!("通知创建开始 monitors={}", monitors.len()));
     for (index, _monitor) in monitors.into_iter().enumerate() {
         let label = format!("notification-{}", index);
 
@@ -309,15 +292,6 @@ async fn show_notification_windows(
         let _ = window.set_focus();
         labels.push(label);
     }
-
-    append_app_log(
-        &app,
-        &format!(
-            "通知创建完成 labels={} elapsed_ms={}",
-            labels.len(),
-            start.elapsed().as_millis()
-        ),
-    );
     Ok(())
 }
 
@@ -328,7 +302,6 @@ fn hide_notification_windows(
 ) -> Result<(), String> {
     let start = Instant::now();
     let mut labels = state.labels.lock().map_err(|_| "锁状态被占用")?;
-    append_app_log(&app, &format!("通知关闭开始 labels={}", labels.len()));
     for label in labels.iter() {
         if !label.as_str().starts_with("notification-") {
             continue;
@@ -338,16 +311,11 @@ fn hide_notification_windows(
         }
     }
     labels.clear();
-    append_app_log(
-        &app,
-        &format!("通知关闭完成 {}ms", start.elapsed().as_millis()),
-    );
     Ok(())
 }
 
 #[tauri::command]
 fn lockscreen_action(app: tauri::AppHandle, action: String) -> Result<(), String> {
-    append_app_log(&app, &format!("锁屏动作: {}", action));
     for (_label, window) in app.webview_windows() {
         let _ = window.emit("lockscreen-action", action.clone());
     }
@@ -424,28 +392,6 @@ fn ensure_dir(app: &AppHandle) -> Result<PathBuf, String> {
     fs::create_dir_all(&dir).map_err(|err| err.to_string())?;
     allow_dir_on_scope(app, &dir)?;
     Ok(dir)
-}
-
-fn append_line(path: &Path, message: &str) {
-    let ts = date_time();
-    let line = format!("[{}] {}\n", ts, message);
-    if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(path) {
-        let _ = file.write_all(line.as_bytes());
-    }
-}
-
-fn append_app_log(app: &AppHandle, message: &str) {
-    let dir = match ensure_dir(app) {
-        Ok(dir) => dir,
-        Err(_) => return,
-    };
-    append_line(&dir.join("app.log"), message);
-}
-
-#[tauri::command]
-fn log_app(app: AppHandle, message: String) -> Result<(), String> {
-    append_app_log(&app, &message);
-    Ok(())
 }
 
 fn apply_default_window_icon<R: tauri::Runtime>(
@@ -616,8 +562,7 @@ pub fn run() {
             show_lock_windows,
             hide_lock_windows,
             show_notification_windows,
-            hide_notification_windows,
-            log_app
+            hide_notification_windows
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
