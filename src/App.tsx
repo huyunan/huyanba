@@ -299,7 +299,6 @@ function App() {
     if (isNotificationWindow) return;
     let active = true;
     const handle = setTimeout(() => {
-      if (localStorage.getItem("filterEnabled") !== "true") return;
       invoke("set_gamma", {
         filterEnabled,
         strength: filterStrength,
