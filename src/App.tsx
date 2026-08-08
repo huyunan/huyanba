@@ -627,12 +627,10 @@ function App() {
         obj[preDate] = {times: 0};
         setPreRestTimes(0);
       }
-      setRestTimes((times) => {
-        const next = times + 1;
-        obj[date] = {times: next};
-        localStorage.setItem("restTimes", JSON.stringify(obj));
-        return next;
-      });
+      const next = obj[date].times + 1;
+      obj[date] = {times: next};
+      setRestTimes(next);
+      localStorage.setItem("restTimes", JSON.stringify(obj));
     }
   }, [handleExitRest, now, endDurationAt, showLockScreen, setPreRestTimes, setRestTimes]);
 
