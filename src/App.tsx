@@ -325,7 +325,7 @@ function App() {
   useEffect(() => {
     if (!isNotificationWindow) return;
     const params = new URLSearchParams(window.location.search);
-    const message = params.get("message") || "休息一下，放松眼睛";
+    const message = params.get("message") || "暂离案几，缓气舒形，目得养，颈得伸。";
     setAutoKeyMsg(message);
   }, [isNotificationWindow]);
   
@@ -909,7 +909,7 @@ function App() {
               <div />
             </div>
             <div className="lockscreen__center">
-              <p>休息一下，放松眼睛</p>
+              <p>暂离案几，缓气舒形，目得养，颈得伸。</p>
               <div className="lockscreen__timer">
                 <div className="lockscreen__timer-value">
                   {lockPayload.restCountdown.replaceAll(":", " : ")}
